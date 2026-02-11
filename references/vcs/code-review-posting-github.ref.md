@@ -27,68 +27,82 @@ gh pr view <ID> -R owner/repo
 
 ## Posting PR Comments
 
-### Option 1: GitHub CLI (Simplest)
+### Option 1: GitHub CLI (Recommended)
 
 ```bash
-# Post comment from stdin
+# Post comment from file (recommended)
 gh pr comment <ID> --body-file comment.md
 
-# Or from literal
+# Or from literal (avoid for long Markdown)
 gh pr comment <ID> --body "Your comment here"
 ```
 
-> Use `--body-file` to avoid escaping issues with code blocks in Markdown.
+> Prefer `--body-file` to avoid escaping issues with code blocks in Markdown.
 
-### Option 2: GitHub REST API (PowerShell)
+### Option 2: GitHub API via `gh api` (Cross-shell)
 
-When `gh pr comment` is not sufficient (e.g., custom formatting, batch posting):
+When `gh pr comment` is not sufficient (e.g., custom formatting, batch posting), use `gh api`.
 
-**Endpoint**: `POST /repos/{owner}/{repo}/issues/{issue_number}/comments`  
-> Note: PRs use the Issues API; the PR number equals the issue number.
+- Endpoint: `POST /repos/{owner}/{repo}/issues/{pr_number}/comments`
+  - Note: PR comments use the Issues API; PR number equals issue number.
 
-**Auth**: `Authorization: Bearer $env:GITHUB_TOKEN` or `$env:GH_TOKEN`
+Examples (prepare `comment.md` first):
 
-```powershell
-# 1. Get repo owner/name from git remote or gh pr view
-$repo = gh pr view <ID> --json repository -q '.repository.nameWithOwner'
-# e.g. "owner/repo"
+```bash
+# bash/zsh
+repo=$(gh pr view <ID> --json repository -q '.repository.nameWithOwner')
+body="$(cat comment.md)"
 
-# 2. Read comment from file
-$body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
-
-# 3. POST comment
-$uri = "https://api.github.com/repos/$repo/issues/<ID>/comments"
-Invoke-RestMethod `
-    -Uri $uri `
-    -Method POST `
-    -Headers @{
-        "Authorization" = "Bearer $env:GITHUB_TOKEN"
-        "Accept" = "application/vnd.github.v3+json"
-    } `
-    -ContentType "application/json" `
-    -Body (@{body = $body} | ConvertTo-Json)
+gh api -X POST "/repos/$repo/issues/<ID>/comments" -f "body=$body"
 ```
 
-### Markdown Code Blocks
-
-Unlike GitLab + PowerShell, GitHub API accepts JSON body directly. No Here-String escaping issue when using `ConvertTo-Json` for the body. For complex Markdown with code blocks, use a file:
-
 ```powershell
-$bodyContent = Get-Content -Path "comment.md" -Raw
-$jsonBody = @{body = $bodyContent} | ConvertTo-Json
-Invoke-RestMethod -Uri $uri -Method POST -Headers $headers -ContentType "application/json" -Body $jsonBody
+# PowerShell
+$repo = gh pr view <ID> --json repository -q '.repository.nameWithOwner'
+$body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
+
+gh api -X POST "/repos/$repo/issues/<ID>/comments" -f "body=$body"
 ```
 
 ---
 
-## Variable Extraction
+## Batch Posting Multiple Comments (One issue per comment)
 
-From `gh pr view <ID> --json repository,number`:
+Use this mode when you want to post **N separate comments** (e.g. 2 Bugs + 3 Suggestions) so the author can reply and resolve them one-by-one.
+
+### File Naming Convention (Recommended: scope by PR number)
+
+To avoid collisions across different reviews, create files under a PR-scoped directory:
+
+- Directory: `comments/pr-<PR_NUMBER>/`
+- Files:
+  - `comments/pr-<PR_NUMBER>/bug-01.md`, `comments/pr-<PR_NUMBER>/bug-02.md`, ...
+  - `comments/pr-<PR_NUMBER>/suggestion-01.md`, `comments/pr-<PR_NUMBER>/suggestion-02.md`, ...
+
+### Required: Unique Marker per Comment
+
+At the top of each comment file, add a stable marker so a future re-review can locate it via API:
+
+- Bug example (first line): `<!-- ai-code-review:github-pr:<PR_NUMBER>:bug-01 -->`
+- Suggestion example (first line): `<!-- ai-code-review:github-pr:<PR_NUMBER>:suggestion-01 -->`
+
+### Recommended: `gh pr comment --body-file`
+
+```bash
+PR=<PR_NUMBER>
+dir="comments/pr-$PR"
+
+for f in "$dir"/bug-*.md "$dir"/suggestion-*.md; do
+  [ -f "$f" ] || continue
+  gh pr comment $PR --body-file "$f"
+done
+```
 
 ```powershell
-$prJson = gh pr view <ID> --json repository,number | ConvertFrom-Json
-$owner = $prJson.repository.owner.login
-$repo = $prJson.repository.name
-$prNumber = $prJson.number
-# API URL: https://api.github.com/repos/$owner/$repo/issues/$prNumber/comments
+$PR = <PR_NUMBER>
+$dir = "comments\pr-$PR"
+
+Get-ChildItem "$dir\bug-*.md", "$dir\suggestion-*.md" | ForEach-Object {
+  gh pr comment $PR --body-file $_.FullName
+}
 ```

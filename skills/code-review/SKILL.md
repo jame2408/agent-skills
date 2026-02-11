@@ -7,9 +7,11 @@ description: |
   - Self Mode: No PR/MR specified → Review local changes
   VCS platform (GitLab/GitHub) is detected from git remote; commands from `vcs-platform-commands.ref.md`.
   
-  Required tools for Phase 2.5 (Impact & Dependency Analysis):
-  - grep, codebase_search, read_file, glob_file_search (查閱本機程式碼)
-  - run_terminal_cmd (執行 git + VCS CLI：glab/gh，需要 network 權限)
+  Required capabilities for Phase 2.5 (Impact & Dependency Analysis):
+  - Exact search in repo (e.g. grep)
+  - Semantic search in repo (optional)
+  - Read file contents
+  - Run git + VCS CLI commands (glab/gh; may require network)
 ---
 
 # Code Review Workflow
@@ -51,6 +53,18 @@ Act as a **Senior Technical Reviewer** (警察/審計員) providing actionable f
 
 ---
 
+## Tool & Shell Compatibility (必讀一次)
+
+> 這個 repo 目標是同時支援不同 agent runtime（Warp / Claude Code / Cursor...）以及不同 shell（PowerShell / bash/zsh）。
+> 因此本 Skill 盡量用「能力描述」寫流程；具體工具/指令差異請依環境讀取下列 reference。
+
+- Runtime tool mapping:
+  - Warp: `{CONFIG_ROOT}/references/runtime/warp.ref.md`
+  - Claude/Cursor (generic): `{CONFIG_ROOT}/references/runtime/claude-cursor.ref.md`
+- Shell notes:
+  - PowerShell: `{CONFIG_ROOT}/references/shell/powershell.ref.md`
+  - bash/zsh: `{CONFIG_ROOT}/references/shell/bash.ref.md`
+
 ## Reference Documents (Auto-Discovery with Naming Convention)
 
 References are loaded dynamically based on **file suffix**. See **Phase 3** for loading logic.
@@ -61,7 +75,7 @@ References are loaded dynamically based on **file suffix**. See **Phase 3** for 
 |--------|----------|---------|
 | `*.rule.md` | ✅ **Auto-load** | Code review 檢查規則 |
 | `*.guide.md` | ❌ Skip | 開發指南、教學文件 |
-| `*.ref.md` | ❌ Skip | 純參考資料 |
+| `*.ref.md` | ❌ Skip by default | 純參考資料（僅在 SKILL.md **明確點名** 時才讀取，例如 VCS 指令、posting、runtime/shell mapping） |
 
 ### VCS Platform Commands (PR/MR Mode)
 
@@ -313,9 +327,18 @@ git --no-pager diff --name-only HEAD | wc -l
 
 在套用規則 (Phase 3) 之前，必須先鎖定「變更的影響面」，避免只看差異行就下結論。
 
+### Tool Selection Rules (跨模型一致性)
+
+為了避免不同 agent / model 使用到較差的工具或跳過驗證，請遵守以下規則：
+
+1. **Exact first**：當你已知明確 symbol（型別/方法/常數/欄位名）時，必須先用 exact search（例如 `grep`）找定義與所有引用。
+2. **Read to verify**：凡是涉及結構推論（繼承、DTO 欄位、mapping、常數值、方法簽章），必須用 file read tool 直接打開定義檔案驗證；不得只依 diff 臆測。
+3. **Semantic is optional**：semantic search tool 只用在「不知道精確名稱」或「需要找使用方式/模式」時；不得取代 exact search。
+4. **No evidence → no bug**：若沒有完成 Phase 2.5 的查證（exact search +/or file read），不得將結論標為確定 Bug；只能標為 Suggestion / 待確認。
+
 ### Step 2.5.0: 確保本機 Workspace 與審查目標一致（前置條件）
 
-> ⚠️ Phase 2.5 的搜尋（grep、read_file、codebase_search）是針對**本機 workspace** 的實際檔案。若本機 branch 錯誤或版本落後，影響面分析會失真。
+> ⚠️ Phase 2.5 的搜尋（exact search / semantic search / read files）是針對**本機 workspace** 的實際檔案。若本機 branch 錯誤或版本落後，影響面分析會失真。
 
 | 模式 | 前置動作 | 目的 |
 |------|----------|------|
@@ -335,12 +358,14 @@ git --no-pager diff --name-only HEAD | wc -l
 
 對每個關鍵實體，在**專案程式碼**（非僅 diff）中執行搜尋：
 
-| 搜尋方向 | 目的 | 工具/方式 |
-|----------|------|-----------|
-| **誰呼叫這段程式** | 呼叫者是否仍假設舊行為、舊型別、舊常數？ | 使用 `grep` 搜尋方法名/型別名/常數名 |
-| **這段程式呼叫誰** | 被呼叫的 API/型別在別處是否也有一致定義？ | 從 diff 內出現的型別、常數名，用 `grep` 或 `read_file` 反查定義 |
-| **共用型別/常數** | 同一常數、同一型別是否在「未變更檔案」中也有使用？定義是否只有一處？ | 使用 `grep` 搜尋常數名、型別名，用 `read_file` 確認定義與引用處 |
-| **繼承/實作關係** | Base 與衍生類的欄位是否真的如 diff 推測（例如「已移到 Base」）？ | 使用 `read_file` 讀取 Base/Response 等實際檔案內容 |
+| 搜尋方向 | 目的 | 做法 |
+|----------|------|------|
+| **誰呼叫這段程式** | 呼叫者是否仍假設舊行為、舊型別、舊常數？ | 用 exact search（例如 `grep`）找方法名/型別名/常數名 |
+| **這段程式呼叫誰** | 被呼叫的 API/型別在別處是否也有一致定義？ | 從 diff 內出現的型別/常數名，先用 exact search 找定義，再用 file read tool 打開確認 |
+| **共用型別/常數** | 同一常數、同一型別是否在「未變更檔案」中也有使用？定義是否只有一處？ | 用 exact search 找所有引用；必要時讀檔確認定義與引用處 |
+| **繼承/實作關係** | Base 與衍生類的欄位是否真的如 diff 推測？ | 直接用 file read tool 打開 Base/Response 等檔案確認 |
+
+> 具體使用哪個工具名稱，依你的 runtime 讀取 `{CONFIG_ROOT}/references/runtime/*.ref.md`。
 
 ### Step 2.5.2 實務執行指引
 
@@ -357,57 +382,41 @@ git --no-pager diff --name-only HEAD | wc -l
      grep -r "class BaseContent" src/
      ```
 
-2. **`codebase_search`** - 語意搜尋
-   - 用途：理解「誰呼叫這個方法」「這個方法在哪裡被使用」
-   - 範例：
-     ```python
-     codebase_search("Where is GetDailyWinnerListAsync called?")
-     codebase_search("How is IPersonalDataHttpClient used in the codebase?")
-     ```
+2. **Semantic search tool（選用）** - 語意搜尋
+   - 用途：當你不知道精確名稱、或要回答「這個方法/型別在哪裡被用到？」
+   - 做法：用 runtime 的 semantic search tool 進行查詢（見 `{CONFIG_ROOT}/references/runtime/*.ref.md`）
 
-3. **`read_file`** - 讀取實際檔案內容
+3. **File read tool** - 讀取實際檔案內容
    - 用途：確認型別定義、繼承關係、欄位是否存在
-   - 範例：
-     ```python
-     read_file("src/be/.../BaseContent.cs")  # 確認 BaseContent 實際定義
-     read_file("src/be/.../BaseContentResponse.cs")  # 確認 Response 實際定義
-     ```
+   - 做法：直接打開檔案內容確認（不要只靠 diff 推論）
 
-4. **`glob_file_search`** - 找相關檔案
-   - 用途：找到所有相關的檔案（例如所有 Response 類別）
-   - 範例：
-     ```python
-     glob_file_search("**/BaseContent*.cs")
-     glob_file_search("**/*Response.cs")
-     ```
+4. **File glob / pattern search tool（選用）** - 找相關檔案
+   - 用途：當你只知道檔名 pattern（例如 `*Response.cs`）
+   - 做法：用 runtime 的 glob 工具找檔，再用 file read tool 驗證
 
 **執行順序範例**：
 
 假設 diff 顯示「`ContentWithBannerResponse` 移除 `Color` 欄位」：
 
-1. **Step 1**：用 `grep` 搜尋 `ContentWithBannerResponse` 的所有引用
+1. **Step 1（Exact search）**：搜尋 `ContentWithBannerResponse` 的所有引用（找 callers）
    ```bash
    grep -r "ContentWithBannerResponse" src/
    ```
 
-2. **Step 2**：用 `read_file` 讀取實際定義
-   ```python
-   read_file("src/be/.../ContentWithBannerResponse.cs")
-   read_file("src/be/.../BaseContentResponse.cs")  # 確認 Base 是否有 Color
-   ```
+2. **Step 2（Read definitions）**：用 file read tool 打開並確認「實際定義」
+   - 打開 `ContentWithBannerResponse` 的檔案
+   - 打開其 base / shared DTO（例如 `BaseContentResponse`）
+   - 目標：確認 `Color` 是否真的移到 base，或是否完全移除
 
-3. **Step 3**：用 `grep` 搜尋 `Color` 欄位的所有使用
+3. **Step 3（Exact search）**：搜尋 `.Color` 的所有使用處（找受影響的 consumers）
    ```bash
-   grep -r "\.Color" src/be/.../PremiumJobsService.cs
+   grep -r "\.Color" src/
    ```
 
-4. **Step 4**：用 `codebase_search` 理解整體結構
-   ```python
-   codebase_search("What is the inheritance relationship between BaseContentResponse and ContentWithBannerResponse?")
-   ```
+4. **Step 4（Optional: semantic search）**：若繼承/組合關係不明確，用 semantic search tool 詢問「型別關係 / 使用方式」
 
 **驗證標準**：
-- ✅ **已驗證**：已用 `read_file` 或 `grep` 確認實際檔案內容 → 可標為 Bug
+- ✅ **已驗證**：已用 file read tool 或 `grep` 確認實際檔案內容 → 可標為 Bug
 - ❌ **未驗證**：僅依 diff 推論，未查閱實際檔案 → 只能標為 Suggestion / 待確認
 
 ### Step 2.5.3: 驗證後再分類結論
@@ -432,14 +441,14 @@ git --no-pager diff --name-only HEAD | wc -l
 **Diff 顯示**：「某 Response 新增欄位 WebsiteService」
 
 **實務執行**：
-1. 用 `read_file` 讀取實際定義：
-   - `read_file("src/be/.../BaseContentResponse.cs")` → 確認 Base 是否有 WebsiteService
-   - `read_file("src/be/.../ContentWithBannerResponse.cs")` → 確認衍生類定義
-2. 用 `grep` 搜尋映射方法：
+1. 用 file read tool 讀取實際定義：
+   - 打開 base DTO（例如 `BaseContentResponse`）→ 確認 base 是否已有 `WebsiteService`
+   - 打開衍生類（例如 `ContentWithBannerResponse`）→ 確認是否重複定義
+2. 用 `grep` 搜尋 mapping / builder / converter 方法：
    - `grep -r "MapContentWithBannerAsync\|MapContentWithTitleAsync" src/`
-3. 用 `read_file` 讀取映射方法內容，確認是否有映射 WebsiteService
-4. 若 Base 有、衍生類也有 → 可能是重複定義（需確認）
-5. 若 Base 有、但某個映射方法沒映射 → 標為 Suggestion「缺映射」
+3. 用 file read tool 打開 mapping 方法內容，確認是否有把 `WebsiteService` 映射出去
+4. 若 base 有、衍生類也有 → 可能是重複定義（需確認）
+5. 若 base 有、但某個 mapping 沒映射 → 標為 Suggestion「缺映射」
 
 #### 範例 3：方法簽章變更影響
 
@@ -447,9 +456,8 @@ git --no-pager diff --name-only HEAD | wc -l
 
 **實務執行**：
 1. 用 `grep` 搜尋所有呼叫處：`grep -r "GetDailyWinnerListAsync" src/`
-2. 用 `read_file` 讀取呼叫者（Controller、Service）的實際程式碼
-3. 確認所有呼叫處是否都已更新參數
-4. 若發現未更新的呼叫處 → 標為 Bug「呼叫處未更新」
+2. 用 file read tool 打開主要呼叫者（例如 Controller、Service）確認參數是否都已更新
+3. 若發現未更新的呼叫處 → 標為 Bug「呼叫處未更新」
 
 ---
 
@@ -510,6 +518,14 @@ Before reporting an issue found in Step 3:
 | **80-100** | Certain issue | Report as primary finding |
 | **50-79** | Likely issue | Report in "Suggestions" section |
 | **<50** | Uncertain | Do not report |
+
+### Evidence Level (偏好：只對高風險議題附詳細證據)
+
+- **High-risk issues**（建議附 evidence / 驗證步驟）：
+  - Security findings
+  - Public API / method signature changes
+  - Shared constants / cross-module behavior changes
+- **Other issues**：保持精簡描述即可（不要貼大量搜尋結果），但仍需完成 Phase 2.5 的驗證後才能下結論。
 
 ### Report Templates
 

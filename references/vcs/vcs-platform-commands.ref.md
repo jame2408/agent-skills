@@ -53,10 +53,10 @@ Detect platform from `git remote get-url origin`:
 
 ## Pre-Fetch Notes (Proxy, etc.)
 
-| Platform | Notes |
-|----------|-------|
-| GitLab | May need to clear proxy: `$env:HTTP_PROXY = ""; $env:HTTPS_PROXY = ""; $env:NO_PROXY = "*"` before glab commands |
-| GitHub | gh CLI typically handles proxy; clear if needed |
+If VCS CLI calls fail due to proxy/network issues, clear proxy env vars **based on your shell**:
+
+- PowerShell: see `{CONFIG_ROOT}/references/shell/powershell.ref.md`
+- bash/zsh: see `{CONFIG_ROOT}/references/shell/bash.ref.md`
 
 ---
 
