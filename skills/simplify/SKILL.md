@@ -16,7 +16,7 @@ When this workflow is triggered with `/simplify`, analyze the specified code and
 - All original features, outputs, and behaviors must remain intact
 
 ### 2. Apply Project Standards
-Follow the established coding standards from GEMINI.md (if exists) including:
+Follow the established coding standards from project documentation (e.g., GEMINI.md, AGENT.md, CLAUDE.md, if exists) including:
 - Use proper import sorting and module organization
 - Prefer explicit function declarations over arrow functions where appropriate
 - Use explicit return type annotations for top-level functions (TypeScript/C#)
