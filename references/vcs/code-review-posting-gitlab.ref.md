@@ -26,12 +26,22 @@ glab mr view <ID> -R "group/namespace/project"
 
 ### API Queries
 
+Same-repo (default, relies on current git repo context):
+
 ```bash
 # Get MR changes
 glab api projects/:fullpath/merge_requests/<ID>/changes
 
 # List comments
 glab api projects/:fullpath/merge_requests/<ID>/notes
+```
+
+Cross-repo / `:fullpath` resolution issues (recommended: explicit project + `-R`):
+
+```bash
+# Use -R to target the correct repo context
+# Use explicit project ID to avoid :fullpath mis-resolution
+glab api -R "group/namespace/project" "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" --method GET
 ```
 
 ---
@@ -56,14 +66,26 @@ glab api projects/:fullpath/merge_requests/<MR_IID>/notes --method POST -f "body
 
 ```powershell
 # PowerShell
+# Note: avoid `&& $var = ...` in PowerShell; use new lines or `;`.
 $body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
 
 glab api projects/:fullpath/merge_requests/<MR_IID>/notes --method POST -f "body=$body"
 ```
 
+Cross-repo (recommended: explicit project ID + -R):
+
+```powershell
+# PowerShell
+# Note: avoid `&& $var = ...` in PowerShell; use new lines or `;`.
+$body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
+
+glab api -R "group/namespace/project" "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" --method POST -f "body=$body"
+```
+
 > Notes:
 > - `:fullpath` placeholder is resolved from the current git repo.
 > - Prefer `-f/--raw-field` for Markdown to avoid type inference surprises.
+> - If you are reviewing a cross-repo MR, or you suspect `:fullpath` is wrong, use `glab api -R <group/project> "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" ...`.
 
 ---
 
@@ -71,6 +93,27 @@ glab api projects/:fullpath/merge_requests/<MR_IID>/notes --method POST -f "body
 
 - Prefer file-based authoring (`comment.md`) to keep Markdown code blocks intact.
 - If you hit proxy/network issues, clear proxy env vars based on your shell (see shell refs).
+
+### Verify the comment was posted (recommended)
+
+Because `glab api` POST responses can be confusing, verify by fetching notes and searching for your stable marker.
+
+```powershell
+# PowerShell example
+$MR_IID = <MR_IID>
+$projectId = <PROJECT_ID>  # use when cross-repo or :fullpath is unreliable
+$repo = "group/namespace/project"  # optional; recommended for cross-repo
+$marker = "ai-code-review:gitlab-mr:$MR_IID:bug-01"
+
+# Same-repo (optional):
+# $notesJson = glab api "projects/$projectId/merge_requests/$MR_IID/notes" --method GET
+
+# Cross-repo (recommended):
+$notesJson = glab api -R $repo "projects/$projectId/merge_requests/$MR_IID/notes" --method GET
+
+# Quick check (string search)
+$notesJson | Select-String $marker
+```
 
 ---
 
