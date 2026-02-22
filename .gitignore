@@ -4,3 +4,15 @@
 
 # AppleDouble
 ._*
+
+# Node.js
+node_modules/
+
+# TypeScript build output
+dist/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo

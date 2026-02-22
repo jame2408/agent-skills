@@ -1,0 +1,48 @@
+{
+  "name": "@jame2408/agent-skills-cli",
+  "version": "0.1.0",
+  "description": "CLI tool to install, update, and manage Agent Skills across AI coding assistants",
+  "type": "module",
+  "bin": {
+    "agent-skills": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "agent-skills",
+    "ai",
+    "cursor",
+    "claude",
+    "copilot",
+    "gemini",
+    "codex",
+    "cli"
+  ],
+  "author": "jame2408",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jame2408/agent-skills.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "commander": "^13.1.0",
+    "@inquirer/prompts": "^7.5.0",
+    "picocolors": "^1.1.1",
+    "yaml": "^2.7.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "tsx": "^4.19.0",
+    "@types/node": "^22.0.0"
+  }
+}
