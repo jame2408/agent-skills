@@ -40,15 +40,24 @@ agent-skills add code-review doc-coauthoring --tool claude-code
 
 # Install globally (user-level)
 agent-skills add code-review --tool cursor --global
-
-# Use a custom / private repository
-agent-skills add --repo git@github.com:my-org/my-skills.git
 ```
 
 | Flag | Description |
 |------|-------------|
 | `-t, --tool <agent>` | Target AI agent (e.g. `cursor`, `claude-code`, `gemini-cli`) |
 | `-g, --global` | Install to user-level global directory |
+| `-r, --repo <url>` | Override the source repository URL |
+
+### `info <skill>`
+
+Show detailed information about a skill, including its full description, required references, and file listing.
+
+```bash
+agent-skills info code-review
+```
+
+| Flag | Description |
+|------|-------------|
 | `-r, --repo <url>` | Override the source repository URL |
 
 ### `list` (alias: `ls`)
@@ -67,6 +76,23 @@ agent-skills list --remote
 |------|-------------|
 | `--remote` | List available skills from the remote repository |
 | `-r, --repo <url>` | Override the source repository URL |
+
+### `remove [skills...]` (alias: `rm`)
+
+Remove installed skills from your project or globally. If no skills are provided, opens an interactive prompt.
+
+```bash
+# Interactive removal
+agent-skills rm
+
+# Remove specific skills
+agent-skills rm code-review --tool cursor
+```
+
+| Flag | Description |
+|------|-------------|
+| `-t, --tool <agent>` | Target AI agent |
+| `-g, --global` | Remove from user-level global directory |
 
 ### `search <keyword>` (alias: `find`)
 
@@ -182,8 +208,9 @@ Full instructions for the AI agent...
 |-------|----------|-------------|
 | `name` | ✅ | Unique skill identifier |
 | `description` | ✅ | Short description shown in `list` and `search` |
+| `metadata.trigger` | | Optional hint showing how to activate the skill (displayed after install) |
 
-The body of `SKILL.md` contains the full instructions the AI agent will follow when the skill is activated. Skills may also include subdirectories for templates, scripts, or other supporting files.
+The body of `SKILL.md` contains the full instructions the AI agent will follow when the skill is activated.
 
 ## License
 
