@@ -63,7 +63,15 @@ export function parseSkillFrontmatter(content: string): SkillMeta | null {
             description = firstLine ?? "";
         }
         if (!name) return null;
-        const trigger = typeof parsed.trigger === "string" ? parsed.trigger.trim() : undefined;
+
+        let trigger: string | undefined = undefined;
+        if (parsed.metadata && typeof parsed.metadata === "object") {
+            const metaObj = parsed.metadata as Record<string, unknown>;
+            if (typeof metaObj.trigger === "string") {
+                trigger = metaObj.trigger.trim();
+            }
+        }
+
         return { name, description, trigger };
     } catch {
         return null;

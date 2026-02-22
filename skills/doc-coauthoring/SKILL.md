@@ -1,6 +1,8 @@
 ---
 name: doc-coauthoring
 description: Structured technical documentation workflow (PRD, RFC, Design Doc). Features Context Gathering, Deep/Fast Drafting modes, and Persona-based Stress Testing.
+metadata:
+  trigger: "I need to write a PRD/RFC/Design doc" or "/doc-coauthoring"
 ---
 
 # Doc Co-Authoring Workflow

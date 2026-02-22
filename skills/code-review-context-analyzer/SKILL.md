@@ -1,6 +1,8 @@
 ---
 name: code-review-context-analyzer
 description: Analyze PR/MR code diffs to generate intent summaries, logic walkthroughs, and Mermaid architecture diagrams. Use when reviewing pull requests, merge requests, examining git diffs, or when the user asks for a code review context report.
+metadata:
+  trigger: "Please analyze this diff" or when reviewing PR/MRs
 ---
 
 # Code Review Context Analyzer

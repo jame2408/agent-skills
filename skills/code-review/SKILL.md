@@ -12,7 +12,8 @@ description: |
   - Semantic search in repo (optional)
   - Read file contents
   - Run git + VCS CLI commands (glab/gh; may require network)
-trigger: /code-review, /review, or "review" keywords
+metadata:
+  trigger: /code-review, /review, or "review" keywords
 ---
 
 # Code Review Workflow
