@@ -65,3 +65,25 @@ export async function promptSelectSkills(
 
     return selected;
 }
+
+/**
+ * Interactively prompt the user to select skills to remove.
+ */
+export async function promptSelectSkillsToRemove(
+    skills: Array<{ name: string; description: string; dirName: string }>
+): Promise<string[]> {
+    if (skills.length === 0) {
+        return [];
+    }
+
+    const selected = await checkbox<string>({
+        message:
+            "🗑️  Select skills to remove (Space to toggle, Enter to confirm):",
+        choices: skills.map((s) => ({
+            name: `${pc.red(s.name)} ${pc.gray(`— ${s.description || "No description"}`)}`,
+            value: s.dirName,
+        })),
+    });
+
+    return selected;
+}
