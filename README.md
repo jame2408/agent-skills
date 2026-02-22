@@ -6,20 +6,20 @@
 
 ```bash
 # Interactive mode — the CLI walks you through agent selection and skill picking
-npx @jame2408/agent-skills-cli add
+npx @james-jj-wang/agent-skills-cli add
 
 # Non-interactive — install a specific skill for a specific agent
-npx @jame2408/agent-skills-cli add code-review --tool cursor
+npx @james-jj-wang/agent-skills-cli add code-review --tool cursor
 ```
 
 ## Installation
 
 ```bash
 # Run directly (no install needed)
-npx @jame2408/agent-skills-cli <command>
+npx @james-jj-wang/agent-skills-cli <command>
 
 # Or install globally
-npm install -g @jame2408/agent-skills-cli
+npm install -g @james-jj-wang/agent-skills-cli
 agent-skills <command>
 ```
 
