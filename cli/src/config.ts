@@ -16,6 +16,8 @@ export const REFERENCES_DIR = "references";
 export interface SkillMeta {
     name: string;
     description: string;
+    /** Optional short trigger/usage hint for post-install display */
+    trigger?: string;
 }
 
 /**
@@ -30,6 +32,8 @@ export interface SkillInfo {
     dirName: string;
     /** Source repo URL */
     repo: string;
+    /** Optional trigger/usage hint */
+    trigger?: string;
 }
 
 /**
@@ -59,7 +63,8 @@ export function parseSkillFrontmatter(content: string): SkillMeta | null {
             description = firstLine ?? "";
         }
         if (!name) return null;
-        return { name, description };
+        const trigger = typeof parsed.trigger === "string" ? parsed.trigger.trim() : undefined;
+        return { name, description, trigger };
     } catch {
         return null;
     }

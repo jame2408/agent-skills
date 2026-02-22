@@ -92,6 +92,9 @@ export const addCommand = new Command("add")
 
                 installSkill(clonedDir, dirName, targetDir);
                 console.log(pc.green(`  ✅ ${skill.name}`));
+                if (skill.trigger) {
+                    console.log(pc.gray(`     Trigger: ${skill.trigger}`));
+                }
             }
 
             console.log(

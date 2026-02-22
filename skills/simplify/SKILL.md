@@ -1,6 +1,7 @@
 ---
 name: simplify
 description: Simplify and refine code for clarity, consistency, and maintainability while preserving all functionality
+trigger: /simplify or /simplify <file>
 ---
 
 # Code Simplifier Workflow

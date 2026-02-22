@@ -85,6 +85,7 @@ export function scanSkills(clonedDir: string, repoUrl: string): SkillInfo[] {
             description: meta.description,
             dirName: entry.name,
             repo: repoUrl,
+            trigger: meta.trigger,
         });
     }
 

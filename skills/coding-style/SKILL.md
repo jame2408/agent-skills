@@ -4,6 +4,7 @@ description: |
   Coding standards and style guidelines for code quality.
   Activated when: writing code, explaining code, or refactoring.
   Loads different references based on action type.
+trigger: Activated when writing, explaining, or refactoring code
 ---
 
 # Coding Style Workflow
