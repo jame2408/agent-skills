@@ -60,6 +60,14 @@ agent-skills info code-review
 |------|-------------|
 | `-r, --repo <url>` | Override the source repository URL |
 
+### `init`
+
+Initialize a project configuration file (`.agent-skills.json`) interactively. This sets up your default AI agent so you don't have to specify `--tool` every time, and allows you to configure custom skill repositories.
+
+```bash
+agent-skills init
+```
+
 ### `list` (alias: `ls`)
 
 List installed or available remote skills.
@@ -127,12 +135,15 @@ agent-skills update --global
 | `-g, --global` | Update globally installed skills |
 | `-r, --repo <url>` | Override the source repository URL |
 
-## Multi-Repo Configuration
+## Configuration (`.agent-skills.json`)
 
-By default, the CLI fetches skills from this repository. To add private or additional sources, create a `.agent-skills.json` file in your project root:
+To set a default AI agent (so you don't need to pass `--tool` every time) or to use private repositories instead of the default, you can generate a configuration file in your project root using `agent-skills init`.
+
+The generated `.agent-skills.json` looks like this:
 
 ```json
 {
+  "defaultAgent": "claude-code",
   "repos": [
     "https://github.com/jame2408/agent-skills.git",
     "git@github.com:my-org/internal-skills.git"
@@ -140,7 +151,7 @@ By default, the CLI fetches skills from this repository. To add private or addit
 }
 ```
 
-The CLI will aggregate skills from all listed repositories.
+The CLI will aggregate skills from all listed repositories. If `--tool` is not passed, it will use `defaultAgent`.
 
 > **⚠️ Security Note:** The `--repo` flag and `.agent-skills.json` trigger `git clone` on the provided URLs. Only use repositories you trust.
 

@@ -8,6 +8,7 @@ import {
     getInstallDir,
     cleanupDirs,
 } from "../git.js";
+import { loadProjectConfig } from "../config.js";
 import { promptSelectAgent, promptSelectSkills } from "../prompts.js";
 
 export const addCommand = new Command("add")
@@ -16,7 +17,8 @@ export const addCommand = new Command("add")
     .option("-t, --tool <agent>", `AI agent to install for (${getAllAgentFlags().slice(0, 5).join(", ")}...)`)
     .option("-g, --global", "Install to user-level global directory", false)
     .option("-r, --repo <url>", "Override the source repository URL")
-    .action(async (skillNames: string[], opts: { tool?: string; global: boolean; repo?: string }) => {
+    .action(async function (this: Command, skillNames: string[]) {
+        const opts = this.optsWithGlobals();
         try {
             // 1. Resolve agent
             let agent = opts.tool ? findAgentByFlag(opts.tool) : undefined;
@@ -26,6 +28,13 @@ export const addCommand = new Command("add")
                     `\nValid agents: ${getAllAgentFlags().join(", ")}`
                 );
                 process.exit(1);
+            }
+            if (!agent) {
+                const config = loadProjectConfig();
+                if (config?.defaultAgent) {
+                    const defaultAgentObj = findAgentByFlag(config.defaultAgent);
+                    if (defaultAgentObj) agent = defaultAgentObj;
+                }
             }
             if (!agent) {
                 agent = await promptSelectAgent();

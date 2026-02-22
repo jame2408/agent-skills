@@ -1,0 +1,165 @@
+# Code Review: GitLab MR Posting
+
+Code Review Skill 在 **MR Mode (GitLab)** 發布留言時使用。詳見 `vcs-platform-commands.ref.md` 的 Platform Detection 與 Posting Comments 區塊。
+
+---
+
+## GitLab CLI Quick Reference
+
+### Essential Commands
+
+```bash
+# View MR details
+glab mr view <ID>
+glab mr view <ID> -F json
+
+# View diff
+glab mr diff <ID>
+
+# Cross-repo
+glab mr view <ID> -R "group/namespace/project"
+```
+
+> If you hit proxy/network issues, clear proxy env vars based on your shell:
+> - PowerShell: `{CONFIG_ROOT}/references/shell/powershell.ref.md`
+> - bash/zsh: `{CONFIG_ROOT}/references/shell/bash.ref.md`
+
+### API Queries
+
+Same-repo (default, relies on current git repo context):
+
+```bash
+# Get MR changes
+glab api projects/:fullpath/merge_requests/<ID>/changes
+
+# List comments
+glab api projects/:fullpath/merge_requests/<ID>/notes
+```
+
+Cross-repo / `:fullpath` resolution issues (recommended: explicit project + `-R`):
+
+```bash
+# Use -R to target the correct repo context
+# Use explicit project ID to avoid :fullpath mis-resolution
+glab api -R "group/namespace/project" "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" --method GET
+```
+
+---
+
+## Posting MR Comments (Preferred: `glab api`)
+
+Prepare `comment.md` with Markdown first.
+
+### Option 1: `glab api` with `--raw-field` (Cross-shell, recommended)
+
+Official options:
+- `-f, --raw-field`: Add a **string** parameter (recommended for `body`)
+- `-F, --field`: Add a parameter of inferred type (may treat numbers/booleans differently)
+- `-X, --method`: Set HTTP method (default GET)
+
+```bash
+# bash/zsh
+body="$(cat comment.md)"
+
+glab api projects/:fullpath/merge_requests/<MR_IID>/notes --method POST -f "body=$body"
+```
+
+```powershell
+# PowerShell
+# Note: avoid `&& $var = ...` in PowerShell; use new lines or `;`.
+$body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
+
+glab api projects/:fullpath/merge_requests/<MR_IID>/notes --method POST -f "body=$body"
+```
+
+Cross-repo (recommended: explicit project ID + -R):
+
+```powershell
+# PowerShell
+# Note: avoid `&& $var = ...` in PowerShell; use new lines or `;`.
+$body = Get-Content -Path "comment.md" -Raw -Encoding UTF8
+
+glab api -R "group/namespace/project" "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" --method POST -f "body=$body"
+```
+
+> Notes:
+> - `:fullpath` placeholder is resolved from the current git repo.
+> - Prefer `-f/--raw-field` for Markdown to avoid type inference surprises.
+> - If you are reviewing a cross-repo MR, or you suspect `:fullpath` is wrong, use `glab api -R <group/project> "projects/<PROJECT_ID>/merge_requests/<MR_IID>/notes" ...`.
+
+---
+
+## Notes
+
+- Prefer file-based authoring (`comment.md`) to keep Markdown code blocks intact.
+- If you hit proxy/network issues, clear proxy env vars based on your shell (see shell refs).
+
+### Verify the comment was posted (recommended)
+
+Because `glab api` POST responses can be confusing, verify by fetching notes and searching for your stable marker.
+
+```powershell
+# PowerShell example
+$MR_IID = <MR_IID>
+$projectId = <PROJECT_ID>  # use when cross-repo or :fullpath is unreliable
+$repo = "group/namespace/project"  # optional; recommended for cross-repo
+$marker = "ai-code-review:gitlab-mr:$MR_IID:bug-01"
+
+# Same-repo (optional):
+# $notesJson = glab api "projects/$projectId/merge_requests/$MR_IID/notes" --method GET
+
+# Cross-repo (recommended):
+$notesJson = glab api -R $repo "projects/$projectId/merge_requests/$MR_IID/notes" --method GET
+
+# Quick check (string search)
+$notesJson | Select-String $marker
+```
+
+---
+
+## Batch Posting Multiple Comments (One issue per comment)
+
+Use this mode when you want to post **N separate comments** (e.g. 2 Bugs + 3 Suggestions) so the author can reply and resolve them one-by-one.
+
+### File Naming Convention (Recommended: scope by MR IID)
+
+To avoid collisions across different reviews, create files under an MR-scoped directory:
+
+- Directory: `comments/mr-<MR_IID>/`
+- Files:
+  - `comments/mr-<MR_IID>/bug-01.md`, `comments/mr-<MR_IID>/bug-02.md`, ...
+  - `comments/mr-<MR_IID>/suggestion-01.md`, `comments/mr-<MR_IID>/suggestion-02.md`, ...
+
+### Required: Unique Marker per Comment
+
+At the top of each comment file, add a stable marker so a future re-review can locate it via API:
+
+- Bug example (first line): `<!-- ai-code-review:gitlab-mr:<MR_IID>:bug-01 -->`
+- Suggestion example (first line): `<!-- ai-code-review:gitlab-mr:<MR_IID>:suggestion-01 -->`
+
+> Tip: Keep each file focused on exactly one issue.
+
+### bash / zsh
+
+```bash
+MR_IID=<MR_IID>
+dir="comments/mr-$MR_IID"
+
+for f in "$dir"/bug-*.md "$dir"/suggestion-*.md; do
+  [ -f "$f" ] || continue
+  body="$(cat "$f")"
+  glab api projects/:fullpath/merge_requests/$MR_IID/notes --method POST -f "body=$body"
+done
+```
+
+### PowerShell
+
+```powershell
+$MR_IID = <MR_IID>
+$dir = "comments\mr-$MR_IID"
+
+Get-ChildItem "$dir\bug-*.md", "$dir\suggestion-*.md" | ForEach-Object {
+  $body = Get-Content -Path $_.FullName -Raw -Encoding UTF8
+  glab api projects/:fullpath/merge_requests/$MR_IID/notes --method POST -f "body=$body"
+}
+```

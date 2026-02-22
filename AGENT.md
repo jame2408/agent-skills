@@ -49,7 +49,10 @@ agent-skills/
         ├── prompts.ts     # Interactive prompt helpers
         └── commands/
             ├── add.ts     # `agent-skills add` command
+            ├── info.ts    # `agent-skills info` command
+            ├── init.ts    # `agent-skills init` command
             ├── list.ts    # `agent-skills list` command
+            ├── remove.ts  # `agent-skills rm` command
             ├── search.ts  # `agent-skills search` command
             └── update.ts  # `agent-skills update` command
 ```

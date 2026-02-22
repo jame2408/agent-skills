@@ -36,11 +36,29 @@ export interface SkillInfo {
     trigger?: string;
 }
 
-/**
- * Project-level config file shape (.agent-skills.json).
- */
 export interface ProjectConfig {
-    repos: string[];
+    /** Default AI agent flag (e.g. "cursor", "claude-code") */
+    defaultAgent?: string;
+    /** Array of repository URLs to fetch skills from */
+    repos?: string[];
+}
+
+/**
+ * Load the project config if it exists.
+ */
+import fs from "node:fs";
+import path from "node:path";
+export function loadProjectConfig(): ProjectConfig | null {
+    const configPath = path.resolve(process.cwd(), CONFIG_FILENAME);
+    if (fs.existsSync(configPath)) {
+        try {
+            const raw = fs.readFileSync(configPath, "utf-8");
+            return JSON.parse(raw) as ProjectConfig;
+        } catch {
+            return null;
+        }
+    }
+    return null;
 }
 
 /**

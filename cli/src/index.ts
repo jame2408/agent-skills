@@ -4,6 +4,7 @@ import { createRequire } from "node:module";
 import { Command } from "commander";
 import { addCommand } from "./commands/add.js";
 import { infoCommand } from "./commands/info.js";
+import { initCommand } from "./commands/init.js";
 import { listCommand } from "./commands/list.js";
 import { removeCommand } from "./commands/remove.js";
 import { searchCommand } from "./commands/search.js";
@@ -25,6 +26,7 @@ program
 
 program.addCommand(addCommand);
 program.addCommand(infoCommand);
+program.addCommand(initCommand);
 program.addCommand(listCommand);
 program.addCommand(removeCommand);
 program.addCommand(searchCommand);

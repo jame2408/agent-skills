@@ -7,7 +7,8 @@ export const searchCommand = new Command("search")
     .description("Search for skills by keyword in the remote repository")
     .argument("<keyword>", "Keyword to search for in skill names and descriptions")
     .option("-r, --repo <url>", "Override the source repository URL")
-    .action(async (keyword: string, opts: { repo?: string }) => {
+    .action(async function (this: Command, keyword: string) {
+        const opts = this.optsWithGlobals();
         try {
             const repos = resolveRepos(opts.repo);
             console.log(pc.cyan(`\n🔍 Searching for "${keyword}"...\n`));

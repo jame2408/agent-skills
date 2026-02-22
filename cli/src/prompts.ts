@@ -1,4 +1,4 @@
-import { select, checkbox } from "@inquirer/prompts";
+import { select, checkbox, input, confirm } from "@inquirer/prompts";
 import pc from "picocolors";
 import { AGENTS, POPULAR_AGENT_FLAGS, type AgentConfig } from "./agents.js";
 
@@ -86,4 +86,31 @@ export async function promptSelectSkillsToRemove(
     });
 
     return selected;
+}
+
+/**
+ * Interactively prompt the user to add custom repositories.
+ */
+export async function promptForRepos(defaultRepo: string): Promise<string[]> {
+    const repos = [defaultRepo];
+
+    let addMore = await confirm({
+        message: "Do you want to add a custom/private skill repository?",
+        default: false
+    });
+
+    while (addMore) {
+        const url = await input({
+            message: "Enter repository URL (e.g. git@github.com:my-org/my-skills.git):"
+        });
+        if (url.trim()) {
+            repos.push(url.trim());
+        }
+        addMore = await confirm({
+            message: "Add another repository?",
+            default: false
+        });
+    }
+
+    return repos;
 }

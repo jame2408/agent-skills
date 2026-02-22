@@ -4,7 +4,7 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { AGENTS, findAgentByFlag, getAllAgentFlags } from "../agents.js";
 import { scanLocalSkills, getInstallDir } from "../git.js";
-import { REFERENCES_DIR } from "../config.js";
+import { REFERENCES_DIR, loadProjectConfig } from "../config.js";
 import { promptSelectAgent, promptSelectSkillsToRemove } from "../prompts.js";
 
 export const removeCommand = new Command("remove")
@@ -13,7 +13,8 @@ export const removeCommand = new Command("remove")
     .argument("[skills...]", "Skill names to remove (omit for interactive mode)")
     .option("-t, --tool <agent>", `AI agent to remove from (${getAllAgentFlags().slice(0, 5).join(", ")}...)`)
     .option("-g, --global", "Remove from user-level global directory", false)
-    .action(async (skillNames: string[], opts: { tool?: string; global: boolean }) => {
+    .action(async function (this: Command, skillNames: string[]) {
+        const opts = this.optsWithGlobals();
         try {
             // 1. Resolve agent
             let agent = opts.tool ? findAgentByFlag(opts.tool) : undefined;
@@ -23,6 +24,13 @@ export const removeCommand = new Command("remove")
                     `\nValid agents: ${getAllAgentFlags().join(", ")}`
                 );
                 process.exit(1);
+            }
+            if (!agent) {
+                const config = loadProjectConfig();
+                if (config?.defaultAgent) {
+                    const defaultAgentObj = findAgentByFlag(config.defaultAgent);
+                    if (defaultAgentObj) agent = defaultAgentObj;
+                }
             }
             if (!agent) {
                 agent = await promptSelectAgent();

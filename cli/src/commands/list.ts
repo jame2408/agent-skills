@@ -9,7 +9,8 @@ export const listCommand = new Command("list")
     .description("List installed skills or available remote skills")
     .option("--remote", "List available skills from the remote repository")
     .option("-r, --repo <url>", "Override the source repository URL")
-    .action(async (opts: { remote?: boolean; repo?: string }) => {
+    .action(async function (this: Command) {
+        const opts = this.optsWithGlobals();
         try {
             if (opts.remote) {
                 // List remote skills

@@ -15,7 +15,8 @@ export const infoCommand = new Command("info")
     .description("Show detailed information about a skill")
     .argument("<skill>", "Skill name or directory name to inspect")
     .option("-r, --repo <url>", "Override the source repository URL")
-    .action(async (skillName: string, opts: { repo?: string }) => {
+    .action(async function (this: Command, skillName: string) {
+        const opts = this.optsWithGlobals();
         try {
             const repos = resolveRepos(opts.repo);
             console.log(pc.gray("\n📡 Fetching skill details...\n"));
