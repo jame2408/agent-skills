@@ -117,7 +117,7 @@ agent-skills search "code style"
 
 ### `update [skills...]`
 
-Update installed skills to the latest version from the remote.
+Update installed skills to the latest version from the remote. The CLI uses a local `.agent-skills-lock.json` file to track versions and will smartly skip downloading skills that are already up to date.
 
 ```bash
 # Update all installed skills

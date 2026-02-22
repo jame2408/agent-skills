@@ -59,6 +59,20 @@ export function cloneRepo(repoUrl: string): string {
 }
 
 /**
+ * Get the latest commit hash (HEAD) from a cloned local repository.
+ */
+export function getRepoCommitHash(clonedDir: string): string {
+    try {
+        return execFileSync("git", ["rev-parse", "HEAD"], {
+            cwd: clonedDir,
+            encoding: "utf-8",
+        }).trim();
+    } catch {
+        return "unknown";
+    }
+}
+
+/**
  * Scan a cloned repo's skills/ directory and return a list of SkillInfo.
  */
 export function scanSkills(clonedDir: string, repoUrl: string): SkillInfo[] {

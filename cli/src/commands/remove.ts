@@ -4,7 +4,7 @@ import { Command } from "commander";
 import pc from "picocolors";
 import { AGENTS, findAgentByFlag, getAllAgentFlags } from "../agents.js";
 import { scanLocalSkills, getInstallDir } from "../git.js";
-import { REFERENCES_DIR, loadProjectConfig } from "../config.js";
+import { REFERENCES_DIR, loadProjectConfig, readLockFile, writeLockFile } from "../config.js";
 import { promptSelectAgent, promptSelectSkillsToRemove } from "../prompts.js";
 
 export const removeCommand = new Command("remove")
@@ -89,12 +89,21 @@ export const removeCommand = new Command("remove")
             // 4. Remove each selected skill
             console.log(pc.gray(`\n🗑️  Removing from: ${installDir}\n`));
 
+            const lock = readLockFile(installDir);
+
             for (const dirName of selectedDirNames) {
                 const skill = localSkills.find((s) => s.dirName === dirName)!;
                 const skillPath = path.join(installDir, dirName);
                 fs.rmSync(skillPath, { recursive: true, force: true });
+
+                if (lock.skills[skill.name]) {
+                    delete lock.skills[skill.name];
+                }
+
                 console.log(pc.red(`  ✖ ${skill.name} — removed`));
             }
+
+            writeLockFile(installDir, lock);
 
             // 5. Cleanup orphaned references
             const remainingSkills = scanLocalSkills(installDir);

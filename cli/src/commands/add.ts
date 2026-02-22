@@ -7,8 +7,9 @@ import {
     installSkill,
     getInstallDir,
     cleanupDirs,
+    getRepoCommitHash,
 } from "../git.js";
-import { loadProjectConfig } from "../config.js";
+import { loadProjectConfig, readLockFile, writeLockFile } from "../config.js";
 import { promptSelectAgent, promptSelectSkills } from "../prompts.js";
 
 export const addCommand = new Command("add")
@@ -94,17 +95,29 @@ export const addCommand = new Command("add")
             );
             console.log(pc.gray(`\n📁 Installing to: ${targetDir}\n`));
 
+            const lock = readLockFile(targetDir);
+
             for (const dirName of selectedDirNames) {
                 const skill = skills.find((s) => s.dirName === dirName)!;
                 const clonedDir = repoCloneMap.get(skill.repo);
                 if (!clonedDir) continue;
 
                 installSkill(clonedDir, dirName, targetDir);
+
+                // Record in lockfile
+                lock.skills[skill.name] = {
+                    version: getRepoCommitHash(clonedDir),
+                    repo: skill.repo,
+                    installedAt: new Date().toISOString(),
+                };
+
                 console.log(pc.green(`  ✅ ${skill.name}`));
                 if (skill.trigger) {
                     console.log(pc.gray(`     Trigger: ${skill.trigger}`));
                 }
             }
+
+            writeLockFile(targetDir, lock);
 
             console.log(
                 pc.green(

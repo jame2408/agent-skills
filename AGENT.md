@@ -66,9 +66,10 @@ agent-skills/
 - To **add a new agent**: append to the `AGENTS` array. If popular, also add the flag to `POPULAR_AGENT_FLAGS`.
 
 ### `config.ts`
-- Exports constants: `DEFAULT_REPO`, `CONFIG_FILENAME`, `SKILLS_DIR`, `REFERENCES_DIR`.
-- Defines `SkillInfo`, `SkillMeta`, `ProjectConfig` interfaces.
+- Exports constants: `DEFAULT_REPO`, `CONFIG_FILENAME`, `LOCK_FILENAME`, `SKILLS_DIR`, `REFERENCES_DIR`.
+- Defines `SkillInfo`, `SkillMeta`, `ProjectConfig`, and version tracking `LockFile` interfaces.
 - `parseSkillFrontmatter()` extracts `name` and `description` from SKILL.md YAML frontmatter (`---\n...\n---`).
+- Contains `readLockFile()` and `writeLockFile()` to manage `.agent-skills-lock.json`.
 
 ### `git.ts`
 - `resolveRepos()` — resolves repo URLs: `--repo` flag > `.agent-skills.json` > `DEFAULT_REPO`.

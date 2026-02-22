@@ -6,6 +6,9 @@ export const DEFAULT_REPO = "https://github.com/jame2408/agent-skills.git";
 /** Name of the local project config file for multi-repo support */
 export const CONFIG_FILENAME = ".agent-skills.json";
 
+/** Name of the lock file used for version tracking */
+export const LOCK_FILENAME = ".agent-skills-lock.json";
+
 /** Expected directory names inside the skills repo */
 export const SKILLS_DIR = "skills";
 export const REFERENCES_DIR = "references";
@@ -43,6 +46,21 @@ export interface ProjectConfig {
     repos?: string[];
 }
 
+/** Lock data for a specific skill */
+export interface SkillLockData {
+    /** The commit hash of the git repository when installed */
+    version: string;
+    /** The source repository URL */
+    repo: string;
+    /** ISO timestamp of when it was installed */
+    installedAt: string;
+}
+
+/** The structure of the .agent-skills-lock.json file */
+export interface LockFile {
+    skills: Record<string, SkillLockData>;
+}
+
 /**
  * Load the project config if it exists.
  */
@@ -59,6 +77,29 @@ export function loadProjectConfig(): ProjectConfig | null {
         }
     }
     return null;
+}
+
+/**
+ * Read the lock file from a target directory
+ */
+export function readLockFile(targetDir: string): LockFile {
+    const lockPath = path.join(targetDir, LOCK_FILENAME);
+    if (fs.existsSync(lockPath)) {
+        try {
+            return JSON.parse(fs.readFileSync(lockPath, "utf-8")) as LockFile;
+        } catch {
+            return { skills: {} };
+        }
+    }
+    return { skills: {} };
+}
+
+/**
+ * Write the lock file to a target directory
+ */
+export function writeLockFile(targetDir: string, lock: LockFile): void {
+    const lockPath = path.join(targetDir, LOCK_FILENAME);
+    fs.writeFileSync(lockPath, JSON.stringify(lock, null, 2) + "\n");
 }
 
 /**
