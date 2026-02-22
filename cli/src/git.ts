@@ -139,8 +139,19 @@ export function installSkill(
     // Copy references alongside skills (go up one level from skills/)
     const targetRefDir = path.resolve(targetBaseDir, "..", REFERENCES_DIR);
     if (fs.existsSync(refSrc)) {
-        fs.mkdirSync(targetRefDir, { recursive: true });
-        copyDirRecursive(refSrc, targetRefDir);
+        let needsReferences = false;
+        const skillMdPath = path.join(skillSrc, "SKILL.md");
+        if (fs.existsSync(skillMdPath)) {
+            const content = fs.readFileSync(skillMdPath, "utf-8");
+            if (content.includes("references/") || content.includes("references\\")) {
+                needsReferences = true;
+            }
+        }
+
+        if (needsReferences) {
+            fs.mkdirSync(targetRefDir, { recursive: true });
+            copyDirRecursive(refSrc, targetRefDir);
+        }
     }
 }
 
