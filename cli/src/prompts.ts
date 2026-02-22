@@ -1,4 +1,5 @@
 import { select, checkbox } from "@inquirer/prompts";
+import pc from "picocolors";
 import { AGENTS, POPULAR_AGENT_FLAGS, type AgentConfig } from "./agents.js";
 
 /**
@@ -57,7 +58,7 @@ export async function promptSelectSkills(
         message:
             "📦  Select the skills to install (Space to toggle, Enter to confirm):",
         choices: skills.map((s) => ({
-            name: `${s.name} — ${s.description || "No description"}`,
+            name: `${pc.cyan(s.name)} ${pc.gray(`— ${s.description || "No description"}`)}`,
             value: s.dirName,
         })),
     });
