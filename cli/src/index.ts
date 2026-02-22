@@ -16,10 +16,12 @@ const program = new Command();
 
 program
     .name("agent-skills")
-    .description(
-        "CLI tool to install, update, and manage Agent Skills across AI coding assistants"
-    )
-    .version(pkg.version);
+    .description("CLI tool to install, update, and manage Agent Skills across AI coding assistants")
+    .version(pkg.version)
+    // Define global options so they appear in the top-level --help
+    .option("-t, --tool <agent>", "Target AI agent (cursor, claude-code, etc.)")
+    .option("-g, --global", "Operate on user-level global directory instead of project")
+    .option("-r, --repo <url>", "Override the source repository URL");
 
 program.addCommand(addCommand);
 program.addCommand(infoCommand);
