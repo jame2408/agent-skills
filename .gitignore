@@ -16,3 +16,11 @@ dist/
 .idea/
 *.swp
 *.swo
+
+# Agent Skills local testing
+.agent-skills.json
+.agents/
+.claude/
+.gemini/
+.cursor/
+.copilot/
