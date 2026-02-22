@@ -114,3 +114,43 @@ export async function promptForRepos(defaultRepo: string): Promise<string[]> {
 
     return repos;
 }
+
+/**
+ * Interactively prompt the user to select optional technology stacks.
+ */
+export async function promptSelectTechs(availableTechs: string[]): Promise<string[]> {
+    if (availableTechs.length === 0) return [];
+
+    const selected = await checkbox<string>({
+        message:
+            "📚  Which technology stacks does your project use? (Space to select, Enter to confirm):",
+        choices: availableTechs.map((t) => ({
+            name: pc.cyan(t),
+            value: t,
+        })),
+    });
+
+    return selected;
+}
+
+/**
+ * Interactively prompt the user to select an optional VCS platform.
+ */
+export async function promptSelectVcs(availableVcs: string[]): Promise<string | undefined> {
+    if (availableVcs.length === 0) return undefined;
+
+    const choices: Array<{ name: string; value: string | undefined }> = [
+        ...availableVcs.map((v) => ({
+            name: pc.cyan(v),
+            value: v,
+        })),
+        { name: pc.gray("Skip / None"), value: undefined },
+    ];
+
+    const selected = await select<string | undefined>({
+        message: "🐙  Which VCS platform do you use for code reviews?",
+        choices: choices,
+    });
+
+    return selected;
+}

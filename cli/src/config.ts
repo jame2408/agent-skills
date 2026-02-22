@@ -44,6 +44,10 @@ export interface ProjectConfig {
     defaultAgent?: string;
     /** Array of repository URLs to fetch skills from */
     repos?: string[];
+    /** Preferred technology stacks for references (e.g. ["dotnet", "python"]) */
+    techs?: string[];
+    /** Preferred VCS platform for references (e.g. "github" or "gitlab") */
+    vcs?: string;
 }
 
 /** Lock data for a specific skill */

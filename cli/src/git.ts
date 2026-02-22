@@ -129,12 +129,56 @@ export function fetchAllSkills(repos: string[]): {
 }
 
 /**
+ * Scan a cloned repo's references/ directory to identify available techs and VCS options.
+ */
+export function scanAvailableReferences(clonedDirs: string[]): {
+    techs: string[];
+    vcs: string[];
+} {
+    const techSet = new Set<string>();
+    const vcsSet = new Set<string>();
+
+    // Core references that are automatically installed and should not be offered as options
+    const coreRefs = ["general", "runtime", "shell", "vcs"];
+
+    for (const dir of clonedDirs) {
+        const refRoot = path.join(dir, REFERENCES_DIR);
+        if (!fs.existsSync(refRoot)) continue;
+
+        const entries = fs.readdirSync(refRoot, { withFileTypes: true });
+        for (const entry of entries) {
+            if (!entry.isDirectory()) continue;
+
+            if (!coreRefs.includes(entry.name)) {
+                techSet.add(entry.name);
+            }
+
+            if (entry.name === "vcs") {
+                const vcsDir = path.join(refRoot, "vcs");
+                const vcsEntries = fs.readdirSync(vcsDir, { withFileTypes: true });
+                for (const vcsEntry of vcsEntries) {
+                    if (vcsEntry.isFile() && vcsEntry.name.startsWith("code-review-posting-") && vcsEntry.name.endsWith(".ref.md")) {
+                        const vcsName = vcsEntry.name.replace("code-review-posting-", "").replace(".ref.md", "");
+                        vcsSet.add(vcsName);
+                    }
+                }
+            }
+        }
+    }
+
+    return { techs: Array.from(techSet).sort(), vcs: Array.from(vcsSet).sort() };
+}
+
+/**
  * Copy a skill directory + references directory from a cloned repo into target.
+ * Optionally filter which tech stacks and VCS files are installed.
  */
 export function installSkill(
     clonedDir: string,
     skillDirName: string,
-    targetBaseDir: string
+    targetBaseDir: string,
+    selectedTechs?: string[],
+    selectedVcs?: string
 ): void {
     const skillSrc = path.join(clonedDir, SKILLS_DIR, skillDirName);
     const refSrc = path.join(clonedDir, REFERENCES_DIR);
@@ -165,7 +209,47 @@ export function installSkill(
 
         if (needsReferences) {
             fs.mkdirSync(targetRefDir, { recursive: true });
-            copyDirRecursive(refSrc, targetRefDir);
+
+            const refEntries = fs.readdirSync(refSrc, { withFileTypes: true });
+            for (const entry of refEntries) {
+                const entrySrc = path.join(refSrc, entry.name);
+                const entryDest = path.join(targetRefDir, entry.name);
+
+                if (entry.isDirectory()) {
+                    if (["general", "runtime", "shell"].includes(entry.name)) {
+                        // Core directories: always install
+                        copyDirRecursive(entrySrc, entryDest);
+                    } else if (entry.name === "vcs") {
+                        // VCS directory: filter files based on selectedVcs
+                        fs.mkdirSync(entryDest, { recursive: true });
+                        const vcsEntries = fs.readdirSync(entrySrc, { withFileTypes: true });
+                        for (const vcsEntry of vcsEntries) {
+                            if (!vcsEntry.isFile()) continue;
+                            const vcsFileSrc = path.join(entrySrc, vcsEntry.name);
+                            const vcsFileDest = path.join(entryDest, vcsEntry.name);
+
+                            if (vcsEntry.name === "vcs-platform-commands.ref.md") {
+                                // Always carry the core vcs commands
+                                fs.copyFileSync(vcsFileSrc, vcsFileDest);
+                            } else if (vcsEntry.name.startsWith("code-review-posting-")) {
+                                const vcsStr = vcsEntry.name.replace("code-review-posting-", "").replace(".ref.md", "");
+                                if (selectedVcs === vcsStr) {
+                                    fs.copyFileSync(vcsFileSrc, vcsFileDest);
+                                }
+                            } else {
+                                // Default fallback for other vcs files
+                                fs.copyFileSync(vcsFileSrc, vcsFileDest);
+                            }
+                        }
+                    } else if (selectedTechs && selectedTechs.includes(entry.name)) {
+                        // Optional tech directories: install if selected
+                        copyDirRecursive(entrySrc, entryDest);
+                    }
+                } else {
+                    // Top level files inside references/
+                    fs.copyFileSync(entrySrc, entryDest);
+                }
+            }
         }
     }
 }

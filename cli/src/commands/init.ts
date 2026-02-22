@@ -1,10 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
-import pc from "picocolors";
 import { confirm } from "@inquirer/prompts";
-import { promptSelectAgent, promptForRepos } from "../prompts.js";
+import pc from "picocolors";
 import { CONFIG_FILENAME, DEFAULT_REPO, type ProjectConfig } from "../config.js";
+import { cloneRepo, cleanupDirs, scanAvailableReferences } from "../git.js";
+import { promptSelectAgent, promptForRepos, promptSelectTechs, promptSelectVcs } from "../prompts.js";
 
 export const initCommand = new Command("init")
     .description(`Initialize a ${CONFIG_FILENAME} configuration file`)
@@ -33,16 +34,46 @@ export const initCommand = new Command("init")
         console.log(pc.gray(`Default repository: ${DEFAULT_REPO}`));
         const repos = await promptForRepos(DEFAULT_REPO);
 
-        // 3. Write Config
-        const config: ProjectConfig = {
-            defaultAgent: agent.flag,
-        };
-        // Only include repos if they diverge from the default single array
-        if (repos.length > 1 || repos[0] !== DEFAULT_REPO) {
-            config.repos = repos;
-        }
+        // 3. Optional References
+        console.log(pc.bold("\n3. References Defaults"));
+        console.log(pc.gray("Scanning remote repositories for available references..."));
 
-        fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+        const finalRepos = (repos.length > 1 || repos[0] !== DEFAULT_REPO) ? repos : [DEFAULT_REPO];
+        const clonedDirs: string[] = [];
+        try {
+            for (const repo of finalRepos) {
+                clonedDirs.push(cloneRepo(repo));
+            }
+            const { techs, vcs } = scanAvailableReferences(clonedDirs);
+
+            let selectedTechs: string[] = [];
+            if (techs.length > 0) {
+                selectedTechs = await promptSelectTechs(techs);
+            }
+
+            let selectedVcs: string | undefined;
+            if (vcs.length > 0) {
+                selectedVcs = await promptSelectVcs(vcs);
+            }
+
+            // 4. Write Config
+            const config: ProjectConfig = {
+                defaultAgent: agent.flag,
+            };
+            if (repos.length > 1 || repos[0] !== DEFAULT_REPO) {
+                config.repos = repos;
+            }
+            if (selectedTechs.length > 0) {
+                config.techs = selectedTechs;
+            }
+            if (selectedVcs) {
+                config.vcs = selectedVcs;
+            }
+
+            fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
+        } finally {
+            cleanupDirs(clonedDirs);
+        }
         console.log(pc.green(`\n🎉 Successfully created ${CONFIG_FILENAME}`));
         console.log(pc.gray("Run \`agent-skills add\` and we'll use these defaults automatically.\n"));
     });

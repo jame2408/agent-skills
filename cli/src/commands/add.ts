@@ -9,8 +9,10 @@ import {
     cleanupDirs,
     getRepoCommitHash,
 } from "../git.js";
-import { loadProjectConfig, readLockFile, writeLockFile } from "../config.js";
-import { promptSelectAgent, promptSelectSkills } from "../prompts.js";
+import { loadProjectConfig, readLockFile, writeLockFile, type ProjectConfig } from "../config.js";
+import { promptSelectAgent, promptSelectSkills, promptSelectTechs, promptSelectVcs } from "../prompts.js";
+import fs from "node:fs";
+import path from "node:path";
 
 export const addCommand = new Command("add")
     .description("Install skills into your project (or globally with -g)")
@@ -21,6 +23,8 @@ export const addCommand = new Command("add")
     .action(async function (this: Command, skillNames: string[]) {
         const opts = this.optsWithGlobals();
         try {
+            const config = loadProjectConfig();
+
             // 1. Resolve agent
             let agent = opts.tool ? findAgentByFlag(opts.tool) : undefined;
             if (opts.tool && !agent) {
@@ -31,7 +35,6 @@ export const addCommand = new Command("add")
                 process.exit(1);
             }
             if (!agent) {
-                const config = loadProjectConfig();
                 if (config?.defaultAgent) {
                     const defaultAgentObj = findAgentByFlag(config.defaultAgent);
                     if (defaultAgentObj) agent = defaultAgentObj;
@@ -87,7 +90,42 @@ export const addCommand = new Command("add")
                 }
             }
 
-            // 4. Install each selected skill
+            // 4. Check if any selected skill requires references
+            let needsReferences = false;
+            for (const dirName of selectedDirNames) {
+                const skill = skills.find((s) => s.dirName === dirName)!;
+                const clonedDir = repoCloneMap.get(skill.repo);
+                if (!clonedDir) continue;
+
+                const skillMdPath = path.join(clonedDir, "skills", dirName, "SKILL.md");
+                if (fs.existsSync(skillMdPath)) {
+                    const content = fs.readFileSync(skillMdPath, "utf-8");
+                    if (content.includes("references/") || content.includes("references\\")) {
+                        needsReferences = true;
+                        break;
+                    }
+                }
+            }
+
+            // 5. Determine Techs and VCS if needed
+            let selectedTechs: string[] | undefined = config?.techs;
+            let selectedVcs: string | undefined = config?.vcs;
+
+            if (needsReferences) {
+                const { techs, vcs } = await import("../git.js").then(m => m.scanAvailableReferences(clonedDirs));
+
+                if (!selectedTechs && techs.length > 0) {
+                    console.log();
+                    selectedTechs = await promptSelectTechs(techs);
+                }
+
+                if (!selectedVcs && vcs.length > 0) {
+                    console.log();
+                    selectedVcs = await promptSelectVcs(vcs);
+                }
+            }
+
+            // 6. Install each selected skill
             const targetDir = getInstallDir(
                 agent.projectPath,
                 agent.globalPath,
@@ -102,7 +140,7 @@ export const addCommand = new Command("add")
                 const clonedDir = repoCloneMap.get(skill.repo);
                 if (!clonedDir) continue;
 
-                installSkill(clonedDir, dirName, targetDir);
+                installSkill(clonedDir, dirName, targetDir, selectedTechs, selectedVcs);
 
                 // Record in lockfile
                 lock.skills[skill.name] = {
