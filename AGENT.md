@@ -136,12 +136,26 @@ npm install
 # Development (runs TypeScript directly via tsx)
 npm run dev -- <command> [args]
 
-# Build (compiles to dist/)
+# Build (runs frontmatter validation + compiles to dist/)
 npm run build
 
 # Run compiled output
 npm start -- <command> [args]
 ```
+
+## Git Hooks (Recommended)
+
+To prevent committing/pushing broken `SKILL.md` YAML frontmatter, this repo includes git hooks under `.githooks/`.
+
+Enable them for your local clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After enabling, `pre-commit` and `pre-push` will run:
+
+- `npm --prefix cli run validate:frontmatter`
 
 ## Security Considerations
 

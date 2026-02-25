@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Validate SKILL.md YAML frontmatter before allowing a push.
+# This is a second line of defense in case commits were created without hooks.
+
+echo "[pre-push] Validating SKILL.md frontmatter..."
+
+npm --prefix cli run -s validate:frontmatter

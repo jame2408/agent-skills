@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Validate SKILL.md YAML frontmatter before allowing a commit.
+# This prevents broken skills from being committed/pushed.
+
+echo "[pre-commit] Validating SKILL.md frontmatter..."
+
+npm --prefix cli run -s validate:frontmatter
