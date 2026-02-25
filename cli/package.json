@@ -7,7 +7,8 @@
     "agent-skills": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "validate:frontmatter": "tsx scripts/validate-frontmatter.ts",
+    "build": "npm run validate:frontmatter && tsc",
     "dev": "tsx src/index.ts",
     "start": "node dist/index.js",
     "prepublishOnly": "npm run build"
