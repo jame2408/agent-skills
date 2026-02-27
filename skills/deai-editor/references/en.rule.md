@@ -145,7 +145,7 @@ Replace with simple "is", "are", "has".
 ## Style Patterns
 
 ### 13. Em Dash Overuse
-Replace excessive em dashes (—) with commas, periods, or parentheses.
+Replace excessive em dashes (—) with commas, periods, or parentheses. *(Note: Only normalize punctuation if the original style is inconsistent or obviously AI-ish. Respect the original style for formal publications or brand copy.)*
 
 **Before:**
 > The term is promoted by Dutch institutions—not by the people themselves. You don't say "Netherlands, Europe"—yet this mislabeling continues—even in official documents.
@@ -203,7 +203,7 @@ Remove emojis used as bullet decorators or heading ornaments.
 ---
 
 ### 18. Curly Quotation Marks
-Replace curly quotes ("\u201c\u201d") with straight quotes ("").
+Replace curly quotes ("\u201c\u201d") with straight quotes (""). *(Note: Only normalize punctuation if the original style is inconsistent or obviously AI-ish. Respect the original style for formal publications or brand copy.)*
 
 ---
 

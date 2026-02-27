@@ -1,12 +1,8 @@
 ---
 name: deai-editor
-description: |
-  Detect and remove signs of AI-generated writing from English and Traditional Chinese (Taiwan) text.
-  Use when editing, reviewing, or rewriting text to make it sound natural and human-written.
-  Triggers: user asks to humanize text, remove AI patterns, de-AI, 去 AI 味, 人味化, 去八股文,
-  潤稿, rewrite to sound natural, check for AI writing patterns, or pastes obviously AI-generated text.
-  Also handles cross-strait terminology normalization (replacing Simplified Chinese / mainland terms
-  with Taiwan Traditional Chinese equivalents in technical documents).
+description: Detect and remove signs of AI-generated writing from English and Traditional Chinese (Taiwan) text. Use when editing, reviewing, or rewriting text to make it sound natural and human-written.
+metadata:
+  trigger: /deai, /deai-editor, humanize text, remove AI patterns, de-AI, 去 AI 味, 人味化, 去八股文, 潤稿, rewrite to sound natural, check for AI writing patterns, obvious AI text
 ---
 
 # De-AI Editor
@@ -18,16 +14,19 @@ Act as a bilingual senior copy editor. Rewrite text to eliminate all traces of A
 1. Remove chatbot pleasantries ("Hope this helps!", "Let me know if you need anything else.", "Great question!")
 2. Remove hedging disclaimers ("While specific details are limited...", "It's important to note that...", "雖然現有資訊有限...")
 3. Remove unnecessary emojis and excessive boldface
-4. Replace vague adjectives with concrete facts or data
+4. Replace vague adjectives with concrete facts or data **ONLY IF** the original text provides them.
+   - **CRITICAL:** Do not invent facts, numbers, dates, sources, or names (NO hallucinations).
+   - If the original text lacks specifics, remove the inflated wording and rewrite plainly without adding new claims.
+   - If concrete data would be helpful, ask the user for it instead of making it up.
 5. Be concise — cut to the point directly
 
 ## Workflow
 
 1. **Detect language** of the input text:
-   - English → load [references/en_rules.md](references/en_rules.md)
-   - Traditional Chinese → load [references/zh_tw_rules.md](references/zh_tw_rules.md)
+   - English → load [references/en.rule.md](references/en.rule.md)
+   - Traditional Chinese → load [references/zh-tw.rule.md](references/zh-tw.rule.md)
    - Mixed → load both
-   - If the text is a **technical document** in Chinese → also load [references/zh_tw_terms.md](references/zh_tw_terms.md) for terminology normalization
+   - If the text is a **technical document** in Chinese → also load [references/zh-tw-terms.ref.md](references/zh-tw-terms.ref.md) for terminology normalization
    - Technical document indicators: contains code blocks, API endpoints, CLI commands, system architecture descriptions, class/function names, or software configuration
 
 2. **Scan and rewrite**: Apply the General Rules above, then apply every pattern from the loaded reference file(s). For each pattern found, rewrite the problematic section while preserving the original meaning.
@@ -42,7 +41,8 @@ Act as a bilingual senior copy editor. Rewrite text to eliminate all traces of A
 ## Output Rules
 
 - Output only the rewritten text
-- Preserve the original document structure (headings, lists, paragraphs) unless the structure itself is an AI pattern (e.g., inline-header vertical lists)
+- Preserve the original document structure (headings, lists, paragraphs). Do not arbitrarily rearrange sections. The ONLY exception is combining "inline-header vertical lists" into a normal paragraph if it fits better.
+- Only normalize punctuation (e.g., curly quotes, em dashes) if the original style is inconsistent or obviously AI-ish. Respect the original style for formal publications or brand copy.
 - Match the intended tone of the original (formal, casual, technical)
 - For Chinese output, always use Traditional Chinese with Taiwan terminology — never use Simplified Chinese or mainland Chinese terms
 - **Formal document exception**: if the original text is a legal document, regulatory filing, or company specification template, preserve its required formal structure — only replace vague/inflated wording, do not restructure
@@ -51,6 +51,6 @@ Act as a bilingual senior copy editor. Rewrite text to eliminate all traces of A
 
 Detailed pattern catalogs with before/after examples are in the reference files:
 
-- **English**: [references/en_rules.md](references/en_rules.md) — 24 patterns based on Wikipedia's "Signs of AI writing"
-- **正體中文**: [references/zh_tw_rules.md](references/zh_tw_rules.md) — 8 patterns targeting AI 八股文
-- **兩岸用語對照**: [references/zh_tw_terms.md](references/zh_tw_terms.md) — cross-strait software terminology mapping (load only for technical documents)
+- **English**: [references/en.rule.md](references/en.rule.md) — 24 patterns based on Wikipedia's "Signs of AI writing"
+- **正體中文**: [references/zh-tw.rule.md](references/zh-tw.rule.md) — 8 patterns targeting AI 八股文
+- **兩岸用語對照**: [references/zh-tw-terms.ref.md](references/zh-tw-terms.ref.md) — cross-strait software terminology mapping (load only for technical documents)
