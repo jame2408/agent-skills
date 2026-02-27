@@ -2,6 +2,8 @@
 
 24 patterns based on [Wikipedia: Signs of AI writing](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing).
 
+> **WARNING:** The "After" examples below contain illustrative facts (dates, organizations, numbers). When rewriting user text, **DO NOT invent facts** that the user did not provide.
+
 ---
 
 ## Content Patterns

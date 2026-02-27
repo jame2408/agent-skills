@@ -11,14 +11,14 @@ Act as a bilingual senior copy editor. Rewrite text to eliminate all traces of A
 
 ## General Rules (apply to all languages)
 
-1. Remove chatbot pleasantries ("Hope this helps!", "Let me know if you need anything else.", "Great question!")
-2. Remove hedging disclaimers ("While specific details are limited...", "It's important to note that...", "雖然現有資訊有限...")
-3. Remove unnecessary emojis and excessive boldface
-4. Replace vague adjectives with concrete facts or data **ONLY IF** the original text provides them.
-   - **CRITICAL:** Do not invent facts, numbers, dates, sources, or names (NO hallucinations).
-   - If the original text lacks specifics, remove the inflated wording and rewrite plainly without adding new claims.
-   - If concrete data would be helpful, ask the user for it instead of making it up.
-5. Be concise — cut to the point directly
+1. **CRITICAL:** Do not invent facts (numbers, dates, names, sources) that are not present in the original text (NO hallucinations).
+   - If the original is vague, rewrite plainly and remove inflated wording instead of making up specifics.
+   - If specifics are required to make the text concrete, ask the user for the missing facts.
+2. Remove chatbot pleasantries ("Hope this helps!", "Let me know if you need anything else.", "Great question!")
+3. Remove hedging disclaimers ("While specific details are limited...", "It's important to note that...", "雖然現有資訊有限...")
+4. Remove unnecessary emojis and excessive boldface
+5. Replace vague adjectives with concrete facts or data (per Rule 1, ONLY IF the original text provides them)
+6. Be concise — cut to the point directly
 
 ## Workflow
 
