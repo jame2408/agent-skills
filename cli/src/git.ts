@@ -233,26 +233,7 @@ export function installSkill(
                         copyDirRecursive(entrySrc, entryDest);
                     } else if (entry.name === "vcs") {
                         // VCS directory: filter files based on selectedVcs
-                        fs.mkdirSync(entryDest, { recursive: true });
-                        const vcsEntries = fs.readdirSync(entrySrc, { withFileTypes: true });
-                        for (const vcsEntry of vcsEntries) {
-                            if (!vcsEntry.isFile()) continue;
-                            const vcsFileSrc = path.join(entrySrc, vcsEntry.name);
-                            const vcsFileDest = path.join(entryDest, vcsEntry.name);
-
-                            if (vcsEntry.name === "vcs-platform-commands.ref.md") {
-                                // Always carry the core vcs commands
-                                fs.copyFileSync(vcsFileSrc, vcsFileDest);
-                            } else if (vcsEntry.name.startsWith("code-review-posting-")) {
-                                const vcsStr = vcsEntry.name.replace("code-review-posting-", "").replace(".ref.md", "");
-                                if (selectedVcs === vcsStr) {
-                                    fs.copyFileSync(vcsFileSrc, vcsFileDest);
-                                }
-                            } else {
-                                // Default fallback for other vcs files
-                                fs.copyFileSync(vcsFileSrc, vcsFileDest);
-                            }
-                        }
+                        installVcsReferences(entrySrc, entryDest, selectedVcs);
                     } else if (selectedTechs && selectedTechs.includes(entry.name)) {
                         // Optional tech directories: install if selected
                         copyDirRecursive(entrySrc, entryDest);
@@ -262,6 +243,34 @@ export function installSkill(
                     fs.copyFileSync(entrySrc, entryDest);
                 }
             }
+        }
+    }
+}
+
+/**
+ * Helper to install VCS references based on selected VCS platform.
+ */
+function installVcsReferences(entrySrc: string, entryDest: string, selectedVcs?: string): void {
+    fs.mkdirSync(entryDest, { recursive: true });
+    const vcsEntries = fs.readdirSync(entrySrc, { withFileTypes: true });
+
+    for (const vcsEntry of vcsEntries) {
+        if (!vcsEntry.isFile()) continue;
+
+        const vcsFileSrc = path.join(entrySrc, vcsEntry.name);
+        const vcsFileDest = path.join(entryDest, vcsEntry.name);
+
+        if (vcsEntry.name === "vcs-platform-commands.ref.md") {
+            // Always carry the core vcs commands
+            fs.copyFileSync(vcsFileSrc, vcsFileDest);
+        } else if (vcsEntry.name.startsWith("code-review-posting-")) {
+            const vcsStr = vcsEntry.name.replace("code-review-posting-", "").replace(".ref.md", "");
+            if (selectedVcs === vcsStr) {
+                fs.copyFileSync(vcsFileSrc, vcsFileDest);
+            }
+        } else {
+            // Default fallback for other vcs files
+            fs.copyFileSync(vcsFileSrc, vcsFileDest);
         }
     }
 }

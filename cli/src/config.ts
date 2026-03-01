@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { parse as parseYaml } from "yaml";
 
 /** Default public repository for open-source skills */
@@ -68,8 +70,6 @@ export interface LockFile {
 /**
  * Load the project config if it exists.
  */
-import fs from "node:fs";
-import path from "node:path";
 export function loadProjectConfig(): ProjectConfig | null {
     const configPath = path.resolve(process.cwd(), CONFIG_FILENAME);
     if (fs.existsSync(configPath)) {

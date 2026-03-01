@@ -1,3 +1,5 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Command } from "commander";
 import pc from "picocolors";
 import { findAgentByFlag, getAllAgentFlags } from "../agents.js";
@@ -11,8 +13,6 @@ import {
 } from "../git.js";
 import { loadProjectConfig, readLockFile, writeLockFile, type ProjectConfig } from "../config.js";
 import { promptSelectAgent, promptSelectSkills, promptSelectTechs, promptSelectVcs } from "../prompts.js";
-import fs from "node:fs";
-import path from "node:path";
 
 export const addCommand = new Command("add")
     .description("Install skills into your project (or globally with -g)")
