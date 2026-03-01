@@ -45,7 +45,7 @@ export function resolveRepos(repoFlag?: string): string[] {
 export function cloneRepo(repoUrl: string): string {
     const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), "agent-skills-"));
     try {
-        execFileSync("git", ["clone", "--depth", "1", "--single-branch", repoUrl, tmpDir], {
+        execFileSync("git", ["clone", "--filter=blob:none", "--single-branch", repoUrl, tmpDir], {
             stdio: "pipe",
         });
     } catch (error) {
@@ -59,11 +59,23 @@ export function cloneRepo(repoUrl: string): string {
 }
 
 /**
- * Get the latest commit hash (HEAD) from a cloned local repository.
+ * Get the latest commit hash (HEAD) for a specific skill from a cloned repository.
+ * It checks the commit history of the skill's directory and the references directory.
  */
-export function getRepoCommitHash(clonedDir: string): string {
+export function getSkillCommitHash(clonedDir: string, skillDirName: string): string {
+    const targetPaths = [`${SKILLS_DIR}/${skillDirName}`];
+
+    // Check if skill uses references
+    const skillMdPath = path.join(clonedDir, SKILLS_DIR, skillDirName, "SKILL.md");
+    if (fs.existsSync(skillMdPath)) {
+        const content = fs.readFileSync(skillMdPath, "utf-8");
+        if (content.includes("references/") || content.includes("references\\")) {
+            targetPaths.push(REFERENCES_DIR);
+        }
+    }
+
     try {
-        return execFileSync("git", ["rev-parse", "HEAD"], {
+        return execFileSync("git", ["log", "-n", "1", "--pretty=format:%H", "--", ...targetPaths], {
             cwd: clonedDir,
             encoding: "utf-8",
         }).trim();

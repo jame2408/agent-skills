@@ -8,7 +8,7 @@ import {
     scanLocalSkills,
     cleanupDirs,
     getInstallDir,
-    getRepoCommitHash,
+    getSkillCommitHash,
 } from "../git.js";
 import { readLockFile, writeLockFile } from "../config.js";
 
@@ -21,7 +21,8 @@ export const updateCommand = new Command("update")
         const opts = this.optsWithGlobals();
         try {
             const repos = resolveRepos(opts.repo);
-            console.log(pc.cyan("\n🔄 Checking for skill updates...\n"));
+            console.log(pc.cyan("\n🔄 Checking for skill updates..."));
+            console.log(pc.gray("   (Note: After CLI upgrades, a one-time full update may occur to migrate versioning mechanisms.)\n"));
 
             // 1. Fetch latest skills from remote
             const { skills: remoteSkills, repoCloneMap } = fetchAllSkills(repos);
@@ -84,7 +85,7 @@ export const updateCommand = new Command("update")
                     const clonedDir = repoCloneMap.get(remote.repo);
                     if (!clonedDir) continue;
 
-                    const remoteCommit = getRepoCommitHash(clonedDir);
+                    const remoteCommit = getSkillCommitHash(clonedDir, remote.dirName);
                     const localLock = lock.skills[local.name];
 
                     if (localLock && localLock.version === remoteCommit) {

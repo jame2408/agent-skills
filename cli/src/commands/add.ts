@@ -7,7 +7,7 @@ import {
     installSkill,
     getInstallDir,
     cleanupDirs,
-    getRepoCommitHash,
+    getSkillCommitHash,
 } from "../git.js";
 import { loadProjectConfig, readLockFile, writeLockFile, type ProjectConfig } from "../config.js";
 import { promptSelectAgent, promptSelectSkills, promptSelectTechs, promptSelectVcs } from "../prompts.js";
@@ -144,7 +144,7 @@ export const addCommand = new Command("add")
 
                 // Record in lockfile
                 lock.skills[skill.name] = {
-                    version: getRepoCommitHash(clonedDir),
+                    version: getSkillCommitHash(clonedDir, skill.dirName),
                     repo: skill.repo,
                     installedAt: new Date().toISOString(),
                 };

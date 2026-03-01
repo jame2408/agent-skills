@@ -19,6 +19,7 @@ dist/
 
 # Agent Skills local testing
 .agent-skills.json
+.agent-skills-lock.json
 .agents/
 .claude/
 .gemini/
