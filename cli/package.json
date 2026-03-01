@@ -1,6 +1,6 @@
 {
   "name": "@james-jj-wang/agent-skills-cli",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "CLI tool to install, update, and manage Agent Skills across AI coding assistants",
   "type": "module",
   "bin": {
