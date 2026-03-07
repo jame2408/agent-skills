@@ -20,6 +20,19 @@ metadata:
 
 ---
 
+## Knowledge Memory Model
+
+```
+經驗 → Instinct（短期記憶）→ Test（長期記憶）
+```
+
+- **Instinct = 短期記憶**：存在於對話 Context 中，有信心度、會衰減、可能遺忘。
+- **Test = 長期記憶**：寫進程式碼庫，每次 CI 都驗證，永遠不會遺忘。
+
+**核心原則**：Bug 修完必須產出迴歸測試；高信心度 Instinct 必須結晶為測試案例。測試套件就是專案的可執行知識庫。
+
+---
+
 ## Execution Flow
 
 ```
@@ -98,9 +111,18 @@ Phase 4: Learn (反思與知識沉澱)
 運行測試套件，確保：
 - BDD 測試案例全數通過
 - 既有測試不受影響（無 regression）
-- 若測試失敗，回到 Phase 2 修正後重新驗證
+- 若測試失敗 → 執行 **Step 3.3: Bug → Test**，然後回到 Phase 2 修正
 
-### Step 3.3: 建議 Commit
+### Step 3.3: Bug → 迴歸測試（強制）
+每一個在 Phase 3 發現的 Bug，**必須**產出對應的迴歸測試：
+
+1. **先寫失敗測試**：撰寫一個針對該 Bug 的測試案例，確認它在當前狀態下失敗
+2. **修復 Bug**：回到 Phase 2 修正程式碼
+3. **驗證測試通過**：確認迴歸測試通過，該 Bug 永遠不會再發生
+
+> 這是「經驗變成長期記憶」的核心機制：Bug 不只是被修復，而是被「記住」。
+
+### Step 3.4: 建議 Commit
 測試全數通過後，依據確定性版本控制規範產出 Git Commit 訊息建議：
 
 ```
@@ -162,15 +184,37 @@ scope: project
 - 信心度 **≥ 0.8**
 - 屬於通用領域（security / workflow / general-best-practices）
 
-### Step 4.5: 產出學習筆記
+### Step 4.5: 記憶結晶化（Instinct → Test）
+
+高信心度 Instinct 應結晶為測試案例，正式寫入程式碼庫成為長期記憶：
+
+**結晶條件**：信心度 ≥ 0.7 且可以用測試表達
+
+**結晶方式**（依 Instinct 領域）：
+
+- **architecture** → 架構適應性測試（Architecture Fitness Test）
+  - 範例：驗證「Controller 不得直接存取 Repository」
+- **code-style** → 約束測試 / Linter 規則
+  - 範例：驗證「Email 欄位必須使用 Value Object」
+- **testing** → 測試模式寫入測試輔助工具 / 範本
+  - 範例：建立 `TestHelper.mockExternalApi()` 共用方法
+- **security** → 安全測試
+  - 範例：驗證「所有 API 端點皆有輸入驗證」
+- **debugging** / **workflow** → 通常不適合結晶為測試，保留為 Instinct
+
+**結晶後**：該 Instinct 標記 `crystallized: true`，註明對應的測試檔案路徑。
+
+> 結晶後的 Instinct 不再需要信心度演化——測試套件會替你記住。
+
+### Step 4.6: 產出學習筆記
 將本輪 Instinct 彙整為學習筆記。
 
 → 格式範本見 [learning-context-template.md](references/learning-context-template.md)
 
-### Step 4.6: 迴圈決策
+### Step 4.7: 迴圈決策
 詢問使用者：
 
-> 「本次開發迴圈已完成，萃取了 N 條 Instinct。是否有下一個實例化需求？」
+> 「本次開發迴圈已完成，萃取了 N 條 Instinct，其中 M 條已結晶為測試。是否有下一個實例化需求？」
 
 - **有下一個需求** → 將學習筆記 + 所有有效 Instinct（信心度 ≥ 0.3）注入為下一輪 Phase 1 的 Context 輸入，重返 Phase 1
 - **無下一個需求** → 輸出「最終開發與學習總結」，正式結束迴圈
@@ -183,14 +227,15 @@ scope: project
 - 修改的檔案：[檔案列表]
 - 測試覆蓋：[通過的測試案例數]
 
-## Instinct 總覽
-- 新增：[數量] 條
+## 知識沉澱
+- 新增 Instinct：[數量] 條
 - 強化：[數量] 條（信心度提升）
 - 弱化：[數量] 條（信心度下降）
-- 高信心度 Instinct（≥ 0.7）：[列表]
+- 結晶為測試：[數量] 條（列出對應測試檔案）
+- 迴歸測試（Bug → Test）：[數量] 條
 
 ## 學習總結
 - 關鍵發現：[重要的技術或架構發現]
 - 全域晉升候選：[可能晉升為 global 的 Instinct]
-- 改善建議：[對專案或流程的改善建議]
+- 待結晶 Instinct：[信心度 ≥ 0.7 但尚未結晶的 Instinct]
 ```

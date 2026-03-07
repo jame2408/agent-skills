@@ -159,3 +159,108 @@ scope: project
 - `id` 相同 → 更新信心度與證據，不建立新條目
 - `trigger` 高度相似但 `id` 不同 → 合併為一條，保留較高信心度
 - `trigger` 部分重疊 → 保持獨立，但在證據中互相引用
+
+## 記憶結晶化（Instinct → Test）
+
+Instinct 是短期記憶，測試是長期記憶。當 Instinct 經過多輪驗證信心度夠高時，應將其「結晶」為自動化測試，寫進程式碼庫成為永久知識。
+
+### 完整生命週期
+
+```
+觀察 / 經驗
+    │ Phase 4 萃取
+    ▼
+Instinct (confidence: 0.3)
+    │ 跨迴圈驗證
+    ▼
+Instinct (confidence: 0.7+)
+    │ 結晶化
+    ▼
+Test (永久寫入程式碼庫)
+```
+
+另一條快速路徑：
+
+```
+Bug 發現 (Phase 3)
+    │ 強制產出迴歸測試
+    ▼
+Test (直接成為長期記憶)
+```
+
+### 結晶條件
+
+- 信心度 **≥ 0.7**
+- 該 Instinct 的行動可以用測試表達（可驗證、可自動化）
+- 尚未被結晶（`crystallized` 欄位不為 `true`）
+
+### 結晶對照表
+
+**architecture → 架構適應性測試 (Architecture Fitness Test)**
+
+驗證架構約束永遠被遵守。
+
+範例：
+```
+Instinct: "Controller 不得直接存取 Repository"
+→ Test: 描換 Controller 層程式碼，驗證無直接 import Repository
+```
+
+**code-style → 約束測試 / Linter 規則**
+
+將程式碼風格偏好固化為可執行的檢查。
+
+範例：
+```
+Instinct: "Email 欄位必須使用 Value Object"
+→ Test: 驗證 Domain Model 中 Email 型別不是 string
+```
+
+**testing → 共用測試輔助工具**
+
+將測試模式寫入可複用的 helper。
+
+範例：
+```
+Instinct: "外部 API 單元測試必須 Mock"
+→ 建立 TestHelper.mockExternalApi() 共用方法
+```
+
+**security → 安全測試**
+
+將安全實踐固化為自動化驗證。
+
+範例：
+```
+Instinct: "所有 API 端點皆需輸入驗證"
+→ Test: 描換所有 Controller，驗證每個都有 validation middleware
+```
+
+**debugging / workflow → 不結晶**
+
+這類 Instinct 屬於操作流程知識，無法用測試表達，保留為 Instinct 即可。
+
+### 結晶後的 Instinct 格式
+
+```yaml
+---
+id: controller-no-direct-repo-access
+trigger: "設計 Controller 層時"
+confidence: 0.8
+domain: architecture
+scope: project
+crystallized: true
+test_file: "tests/architecture/controller-dependency-test.spec.ts"
+---
+# Controller 不得直接存取 Repository
+## 行動
+Controller 必須透過 Service 層存取資料，不得直接引用 Repository。
+## 證據
+- Phase 2 中直接存取導致循環依賴，重構後解決
+- 第 3 輪迴圈再次驗證
+## 結晶
+- 測試檔案：`tests/architecture/controller-dependency-test.spec.ts`
+- 結晶日期：2026-03-07
+```
+
+> 結晶後的 Instinct 不再參與信心度演化。測試套件會替你永遠記住這條知識。
