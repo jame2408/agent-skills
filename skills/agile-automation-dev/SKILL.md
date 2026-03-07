@@ -111,31 +111,68 @@ Phase 4: Learn (反思與知識沉澱)
 
 ---
 
-## Phase 4: Learn (反思與知識沉澱)
+## Phase 4: Learn (反思與知識沉澱 — Instinct-Based)
 
-### Step 4.1: 歸納問題與解決方案
-回顧 Phase 1–3 執行過程中遭遇的：
-- 技術問題與解決方案
-- 需求理解偏差與校正過程
-- 架構決策與取捨
+本階段採用 **Instinct（本能）模型** 進行結構化知識沉澱：將自由筆記升級為帶有信心度評分的原子化學習單元，支援跨迴圈累積與演化。
 
-### Step 4.2: 萃取學習筆記
-將新理解記錄為「學習筆記（Learning Context）」。
+→ 完整指引見 [instinct-guide.md](references/instinct-guide.md)
+
+### Step 4.1: 偵測模式
+回顧 Phase 1–3 執行過程，識別以下四類模式：
+
+1. **使用者修正** → 使用者糾正了 Agent 的假設或做法
+2. **錯誤解決** → 遭遇問題後找到的解法
+3. **重複工作流** → 跨步驟重複出現的操作序列
+4. **架構決策** → 技術選型、取捨與原因
+
+### Step 4.2: 萃取 Instinct
+將每個識別到的模式轉為一條 Instinct：
+
+```yaml
+---
+id: prefer-repository-pattern
+trigger: "設計資料存取層時"
+confidence: 0.5
+domain: architecture
+scope: project
+---
+# 優先採用 Repository Pattern
+## 行動
+資料存取邏輯統一透過 Repository 介面隔離。
+## 證據
+- Phase 2 中直接存取 DB 導致測試困難，重構後通過
+```
+
+**Instinct 屬性**：
+- **原子性**：一個觸發條件、一個行動
+- **信心度**：0.3（試探）→ 0.5（中等）→ 0.7（強）→ 0.9（近乎確定）
+- **領域標籤**：architecture / code-style / testing / security / workflow / debugging
+- **範疇**：`project`（預設，專案內有效）或 `global`（跨專案通用）
+
+### Step 4.3: 更新既有 Instinct
+檢查先前迴圈累積的 Instinct：
+- 本次驗證了既有 Instinct → 信心度 **+0.1**
+- 本次與既有 Instinct 矛盾 → 信心度 **-0.15**，並記錄矛盾證據
+- 合併相似 Instinct，避免重複
+
+### Step 4.4: 範疇決策與晉升
+
+預設所有 Instinct 為 `project` 範疇。符合以下條件時晉升為 `global`：
+- 同一模式在 **2+ 個專案** 中出現
+- 信心度 **≥ 0.8**
+- 屬於通用領域（security / workflow / general-best-practices）
+
+### Step 4.5: 產出學習筆記
+將本輪 Instinct 彙整為學習筆記。
 
 → 格式範本見 [learning-context-template.md](references/learning-context-template.md)
 
-學習筆記涵蓋：
-- 系統架構的新理解
-- 需求細節的澄清
-- 技術決策的原因
-- 可複用的模式或解法
-
-### Step 4.3: 迴圈決策
+### Step 4.6: 迴圈決策
 詢問使用者：
 
-> 「本次開發迴圈已完成。是否有下一個實例化需求？」
+> 「本次開發迴圈已完成，萃取了 N 條 Instinct。是否有下一個實例化需求？」
 
-- **有下一個需求** → 將學習筆記注入為下一輪 Phase 1 的 Context 輸入，重返 Phase 1
+- **有下一個需求** → 將學習筆記 + 所有有效 Instinct（信心度 ≥ 0.3）注入為下一輪 Phase 1 的 Context 輸入，重返 Phase 1
 - **無下一個需求** → 輸出「最終開發與學習總結」，正式結束迴圈
 
 ### 最終總結格式
@@ -146,8 +183,14 @@ Phase 4: Learn (反思與知識沉澱)
 - 修改的檔案：[檔案列表]
 - 測試覆蓋：[通過的測試案例數]
 
+## Instinct 總覽
+- 新增：[數量] 條
+- 強化：[數量] 條（信心度提升）
+- 弱化：[數量] 條（信心度下降）
+- 高信心度 Instinct（≥ 0.7）：[列表]
+
 ## 學習總結
 - 關鍵發現：[重要的技術或架構發現]
-- 沉澱知識：[可供未來參考的知識點]
+- 全域晉升候選：[可能晉升為 global 的 Instinct]
 - 改善建議：[對專案或流程的改善建議]
 ```
