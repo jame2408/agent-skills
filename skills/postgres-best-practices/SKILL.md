@@ -4,6 +4,8 @@ description: |
   PostgreSQL performance optimization and best practices for query tuning, schema design, indexing, connection management, concurrency, and security.
   Use when: writing or reviewing SQL queries, creating migrations, designing schemas, troubleshooting slow queries, configuring connection pooling, implementing Row Level Security, or optimizing PostgreSQL database performance.
   Covers: index strategies (B-tree, GIN, GiST, BRIN, composite, partial, covering), data types, constraints, partitioning, RLS, EXPLAIN ANALYZE, pg_stat_statements, VACUUM/ANALYZE, deadlock prevention, advisory locks, SKIP LOCKED queues, batch operations, cursor pagination, UPSERT, full-text search, and JSONB indexing.
+metadata:
+  trigger: Writing SQL, creating migrations, designing schemas, optimizing queries, reviewing database code, or keywords like "slow query", "index", "RLS", "deadlock", "connection pool"
 ---
 
 # PostgreSQL Best Practices
