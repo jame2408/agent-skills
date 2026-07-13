@@ -2,6 +2,9 @@
 
 .NET 後端開發的安全模式與反模式。
 
+> **性質說明**：本文件是**規範**（norm），不是現況描述。部分機制（如 FluentValidation、自訂授權 attribute）
+> 使用專案可能尚未導入 —— 不代表不需要遵循；當新增相關功能時，必須依本規範實作。
+
 ---
 
 ## A. Critical Security Issues
@@ -76,14 +79,15 @@ public async Task<IActionResult> GetUserProfile(int id)
     return Ok(await _userService.GetProfile(id));
 }
 
-// ✅ 本專案使用 [Authenticate] 或 [Authorize]
-[Authenticate]
+// ✅ 敏感端點必須套用授權屬性（標準 [Authorize]；若專案有自訂授權 attribute 則依其規範）
+// 注意：GetUserIdFromClaims() 為示意 —— 實作時依專案實際的身分識別機制取得使用者身分
+[Authorize]
 [HttpGet("users/{id}/profile")]
 public async Task<IActionResult> GetUserProfile(int id, CancellationToken cancel = default)
 {
     // 檢查使用者是否有權存取此 profile（防止 IDOR）
-    var talentNo = User.GetTalentNo();
-    if (talentNo != id)
+    var currentUserId = GetUserIdFromClaims();
+    if (currentUserId != id)
     {
         return this.Failure(FailureProvider.CreateFailure(ErrorCode.Forbidden));
     }
@@ -183,7 +187,9 @@ public IActionResult GetFile([FromQuery] string filename)
 
 ## B. Input Validation
 
-### 本專案使用 FluentValidation
+### 輸入驗證規範（建議採用 FluentValidation）
+
+> 若專案尚未導入 FluentValidation，導入前 Request 驗證至少要用 DataAnnotations 或明確的手動檢查。
 
 ```csharp
 // ✅ Request 搭配 FluentValidation
@@ -262,7 +268,7 @@ public class UserResponse
 |-------|-------------------|----------|
 | SQL Injection | `$"SELECT...{var}"`, `+ variable +` in SQL | 🔴 Critical |
 | Hardcoded Secrets | `password =`, `apiKey =`, `connectionString =` literals | 🔴 Critical |
-| Missing Auth | 敏感端點沒有 `[Authorize]` 或 `[Authenticate]` | 🔴 Critical |
+| Missing Auth | 敏感端點沒有 `[Authorize]`（或專案自訂授權 attribute） | 🔴 Critical |
 | SSRF | `HttpClient.Get*(userInput)` | 🔴 Critical |
 | Path Traversal | `File.*` 使用使用者輸入 | 🔴 Critical |
 | XSS | `Html.Raw(userInput)` | 🔴 Critical |
