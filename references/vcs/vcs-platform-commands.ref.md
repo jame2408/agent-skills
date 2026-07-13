@@ -16,6 +16,11 @@ Detect platform from `git remote get-url origin`:
 
 > If platform cannot be detected, default to GitLab (glab) for backward compatibility, or ask user to specify.
 
+> ⚠️ **Self-hosted instances**: 自架 GitLab / GitHub Enterprise 的 URL（常見為內網 IP 或自訂網域）通常**不含**
+> "gitlab"/"github" 關鍵字，上表的關鍵字偵測會失敗。此時應在**使用專案**明確宣告平台 ——
+> 在該專案安裝的這份檔案中加上宣告（例如「`192.168.x.x` 這台主機是自架 GitLab，一律使用 glab」），
+> 或寫進專案的 `CLAUDE.md` / `AGENT.md`。
+
 ---
 
 ## Command Matrix

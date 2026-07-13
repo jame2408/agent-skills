@@ -2,15 +2,19 @@
 name: postgres-best-practices
 description: |
   PostgreSQL performance optimization and best practices for query tuning, schema design, indexing, connection management, concurrency, and security.
-  Use when: writing or reviewing SQL queries, creating migrations, designing schemas, troubleshooting slow queries, configuring connection pooling, implementing Row Level Security, or optimizing PostgreSQL database performance.
+  Use ONLY when the target database is PostgreSQL (Npgsql connection, PostgreSQL container, or user explicitly names PostgreSQL).
+  ⚠️ Check the project context first: if the project's primary database is another RDBMS (SQL Server, MySQL, Oracle...), do NOT apply these PostgreSQL-specific rules (timestamptz, GIN/BRIN indexes, RLS, JSONB, SKIP LOCKED syntax, etc.) to that work.
   Covers: index strategies (B-tree, GIN, GiST, BRIN, composite, partial, covering), data types, constraints, partitioning, RLS, EXPLAIN ANALYZE, pg_stat_statements, VACUUM/ANALYZE, deadlock prevention, advisory locks, SKIP LOCKED queues, batch operations, cursor pagination, UPSERT, full-text search, and JSONB indexing.
 metadata:
-  trigger: Writing SQL, creating migrations, designing schemas, optimizing queries, reviewing database code, or keywords like "slow query", "index", "RLS", "deadlock", "connection pool"
+  trigger: Explicitly PostgreSQL-related work only — keywords like "PostgreSQL", "Postgres", "Npgsql", "pg_stat", "RLS". Do NOT trigger on generic SQL/index/slow-query work when the project's primary database is not PostgreSQL.
 ---
 
 # PostgreSQL Best Practices
 
 Performance optimization guide for PostgreSQL. Rules are organized by impact priority across 8 categories.
+
+> ⚠️ **Scope guard**: 套用前先確認目標資料庫確實是 PostgreSQL。
+> 若使用專案的主要資料庫是其他 RDBMS（SQL Server、MySQL…），本 skill 的 PG 專屬語法不適用，不要誤套。
 
 ## When to Apply
 

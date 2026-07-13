@@ -15,6 +15,22 @@
 
 ---
 
+## A2. 測試策略：什麼該測在哪裡
+
+> 若使用專案的 `CLAUDE.md` / `AGENT.md` 有更具體的測試規範，以專案規範為準。
+
+| 測試對象 | 用什麼測 | Mock 原則 |
+|----------|----------|-----------|
+| **純邏輯核心**（演算法、明確 input→output，如 key 產生器、樹狀結構 builder、序列化） | 單元測試 | 不需 mock |
+| **含商業邏輯的 Service**（分支判斷、規則驗證、錯誤轉換） | 單元測試 | **為了隔離商業邏輯**可以 mock repository —— mock 是手段不是目的 |
+| **CRUD / 編排流程**（薄薄轉呼叫 repository 的 service、實際打 DB 的 repository） | 整合測試（Reqnroll） | 不寫 mock-heavy 單元測試；修 bug 優先用整合測試 pin 住 |
+| **基礎設施行為**（HybridCache、Redis、DbContext 的並發、生命週期、逾時） | 不寫 mock 單元測試 | mock 無法重現真實排程與連線行為，靠設計保證 + 觀測 + 真實環境測試 |
+
+> **判斷準則**：寫測試前先問「這個測試在保護什麼邏輯？」若答案是「service 裡的規則 / 分支」→ mock repository 合理；
+> 若答案只是「service 有呼叫 repository」→ 那是編排流程，請改寫整合測試。**不要為了 mock 而 mock。**
+
+---
+
 ## B. Test Naming Conventions
 
 ### Pattern: MethodName_WhenCondition_ShouldExpectedResult
